@@ -27,6 +27,7 @@ const HomeBanner = () => {
                     </div>
                 </div>
             </section>
+            <h3>test</h3>
         </>
     )
 }
