@@ -3,7 +3,7 @@ import MainLayout from "./layout/MainLayout"
 import LandingPage from "./pages/LandingPage"
 import LoginPage from "./pages/Auth/LoginPage"
 import RegisterPage from "./pages/Auth/RegisterPage"
-import Dashboard from "./pages/dashboard"
+import Dashboard from "./pages/Dashboard"
 
 const AppRoutes = () => {
     return (
