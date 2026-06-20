@@ -18,8 +18,8 @@ const Header = () => {
 
             {/* Desktop menu */}
             <div className='hidden lg:flex gap-4 items-center'>
-              <Link to='/login' className='text-gray-500 text-sm'>Login</Link>
-              <Link to='/singup' className='blue-bg text-white px-4 py-2 rounded-full shadow-md text-sm'>Join Free</Link>
+              <Link to='/login' className='text-sm'>Login</Link>
+              <Link to='/register' className='blue-bg text-white px-4 py-2 rounded-full shadow-md text-sm'>Join Free</Link>
             </div>
 
             {/* Mobile button */}
@@ -32,7 +32,7 @@ const Header = () => {
              {/* Mobile menu */}
             {mobileMenuOpen && (
               <div className='lg:hidden absolute grid content-start gap-2 top-17 w-full left-0 h-screen bg-white p-8' >
-                <Link to='/login' className='text-gray-500'>Login</Link>
+                <Link to='/login'>Login</Link>
                 <Link to='/singup' className='blue-bg text-white px-4 py-1 rounded-full shadow-md h-fit w-fit'>Join Free</Link>
               </div>
             )}
