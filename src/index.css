@@ -1,7 +1,36 @@
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap');
+
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Outfit:wght@400;500;600;700&display=swap');
+
+:root {
+  /* font-family: "Outfit", sans-serif; */
+  font-weight: 400;
+  color: #24105c;
+  background-color: #f8f7f3;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+.font-fraunces {
+  font-family: "Fraunces", serif;
+}
 
 body {
-    font-family: "Inter", sans-serif;
-    /* color: #0F0E47; */
+  margin: 0;
+  min-width: 320px;
+  background-color: #f8f7f3;
+}
+.wrapper{
+  width: 800px;
+  max-width: 100%;
+}
+button {
+  cursor: pointer;
+}
+
+/* a {
+  text-decoration: none;
+} */
+
+* {
+  box-sizing: border-box;
 }

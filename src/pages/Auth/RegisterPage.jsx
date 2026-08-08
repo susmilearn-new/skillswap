@@ -1,5 +1,5 @@
 import { Formik, Form, Field, ErrorMessage } from "formik";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import * as Yup from "yup";
 
@@ -16,31 +16,77 @@ const skillsList = [
 
 const RegisterPage = () => {
 
+    const navigate = useNavigate();
+
     const initialValues = {
-        fullName: "",
+        firstName: "",
+        lastName: "",
         location: "",
         email: "",
         password: "",
-        role: "Learner",
         skillsToTeach: [],
         skillsToLearn: [],
     };
 
     const validationSchema = Yup.object({
-        fullName: Yup.string().required("Fullname is required"),
-        location: Yup.string().required("Location is required"),
-        email: Yup.string()
-            .email("Invalid Email")
-            .required("Email is required"),
-        password: Yup.string().
-            min(8, "Minimum 8 characters")
-            .required("Password is required"),
-        skillsToLearn: Yup.array().min(1, "Select at least one skill"),
-        skillsToTeach: Yup.array().when("role", {
-            is: "Mentor",
-            then: (schema) => schema.min(1, "Select at least one skill"),
-        }),
+        firstName: Yup.string()
+            .trim()
+            .min(3, "First name must be at least 3 characters")
+            .max(50, "First name cannot exceed 50 characters")
+            .matches(
+                /^[a-zA-Z\s]+$/,
+                "First name can only contain letters and spaces"
+            )
+            .required("First name is required"),
 
+        lastName: Yup.string()
+            .trim()
+            .min(3, "Last name must be at least 3 characters")
+            .max(50, "Last name cannot exceed 50 characters")
+            .matches(
+                /^[a-zA-Z\s]+$/,
+                "Last name can only contain letters and spaces"
+            )
+            .required("Last name is required"),
+
+        location: Yup.string()
+            .trim()
+            .min(2, "Location must be at least 2 characters")
+            .max(100, "Location cannot exceed 100 characters")
+            .required("Location is required"),
+
+        email: Yup.string()
+            .trim()
+            .lowercase()
+            .email("Enter a valid email address")
+            .required("Email is required"),
+
+        password: Yup.string()
+            .min(8, "Password must be at least 8 characters")
+            .max(32, "Password cannot exceed 32 characters")
+            .matches(
+                /[A-Z]/,
+                "Password must contain at least one uppercase letter"
+            )
+            .matches(
+                /[a-z]/,
+                "Password must contain at least one lowercase letter"
+            )
+            .matches(
+                /[0-9]/,
+                "Password must contain at least one number"
+            )
+            .matches(
+                /[@$!%*?&]/,
+                "Password must contain at least one special character (@$!%*?&)"
+            )
+            .required("Password is required"),
+
+        skillsToTeach: Yup.array()
+            .min(1, "Select at least one skill to teach"),
+
+        skillsToLearn: Yup.array()
+            .min(1, "Select at least one skill to learn"),
     });
 
     const toggleSkill = (
@@ -75,23 +121,30 @@ const RegisterPage = () => {
 
         localStorage.setItem("users", JSON.stringify(users));
 
+        resetForm();
+
         toast.success('Registration Successfull');
 
-        console.log(values);
-
-        resetForm();
+        navigate('/login')
     };
 
     return (
         <>
-            <section className="login-section section-bg py-16 md:py-24">
-                <div className='container mx-auto px-4 md:px-8 lg:px-16 wrapper'>
-                    {/* logo */}
-                    <div className="pb-8">
-                        <Link to='/' className='flex'><img src='../logo.svg' alt='skillwap' width='200px' className='mr-1' /></Link>
+           
+            <section className="min-h-screen bg-[#f8f7f4] py-12 md:py-16">
+                <div className="wrapper mx-auto px-4">
+
+                    {/* Heading */}
+                    <div className="mb-8">
+                        <h2 className="font-mono text-4xl font-bold text-dark">
+                            Create your account
+                        </h2>
+
+                        <p className="mt-2 text-base text-light">
+                            Free forever. No credit card required.
+                        </p>
                     </div>
-                    <h2 className="text-4xl font-bold pb-4">Create your account</h2>
-                    <p className='text-lg text-light pb-10'>Join thousands learning and teaching on SkillSwap.</p>
+
                     <Formik
                         initialValues={initialValues}
                         validationSchema={validationSchema}
@@ -99,123 +152,120 @@ const RegisterPage = () => {
                     >
                         {({ values, setFieldValue }) => (
                             <Form className="space-y-6">
-                                <div className="grid md:grid-cols-2 gap-4">
+
+                                {/* First + Last Name */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
                                     <div>
-                                        <label className="font-semibold text-sm block mb-2">
-                                            Full Name
+                                        <label className="block mb-2 font-semibold text-dark">
+                                            First name
                                         </label>
 
                                         <Field
-                                            name="fullName"
-                                            placeholder="Alex Rivers"
-                                            className="w-full border border-gray-300 border-solid rounded-full p-3"
+                                            name="firstName"
+                                            placeholder="Emma"
+                                            className="w-full rounded-full border border-gray-200 bg-white px-5 py-4 outline-none text-light focus:border-[#272757]"
                                         />
 
                                         <ErrorMessage
-                                            name="fullName"
+                                            name="firstName"
                                             component="p"
-                                            className="text-red-500 text-sm"
+                                            className="mt-1 text-sm text-red-500"
                                         />
                                     </div>
 
                                     <div>
-                                        <label className="font-semibold text-sm block mb-2">
-                                            Location
+                                        <label className="block mb-2 font-semibold text-dark">
+                                            Last name
                                         </label>
 
                                         <Field
-                                            name="location"
-                                            placeholder="Berlin, DE"
-                                            className="w-full border border-gray-300 border-solid rounded-full p-3"
+                                            name="lastName"
+                                            placeholder="Johnson"
+                                            className="w-full rounded-full border border-gray-200 bg-white px-5 py-4 outline-none text-light focus:border-[#272757]"
                                         />
 
                                         <ErrorMessage
-                                            name="location"
+                                            name="lastName"
                                             component="p"
-                                            className="text-red-500 text-sm"
+                                            className="mt-1 text-sm text-red-500"
                                         />
                                     </div>
+
                                 </div>
 
+                                {/* Email */}
                                 <div>
-                                    <label className="font-semibold text-sm block mb-2">
-                                        Email
+                                    <label className="block mb-2 font-semibold text-dark">
+                                        Email address
                                     </label>
 
                                     <Field
                                         name="email"
                                         type="email"
-                                        placeholder="you@company.com"
-                                        className="w-full border border-gray-300 border-solid rounded-full p-3"
+                                        placeholder="you@example.com"
+                                        className="w-full rounded-full border border-gray-200 bg-white px-5 py-4 outline-none text-light focus:border-[#272757]"
                                     />
 
                                     <ErrorMessage
                                         name="email"
                                         component="p"
-                                        className="text-red-500 text-sm"
+                                        className="mt-1 text-sm text-red-500"
                                     />
                                 </div>
 
+                                {/* Location */}
                                 <div>
-                                    <label className="font-semibold text-sm block mb-2">
+                                    <label className="block mb-2 font-semibold text-dark">
+                                        Location
+                                    </label>
+
+                                    <Field
+                                        name="location"
+                                        placeholder="London, UK"
+                                        className="w-full rounded-full border border-gray-200 bg-white px-5 py-4 outline-none text-light focus:border-[#272757]"
+                                    />
+
+                                    <ErrorMessage
+                                        name="location"
+                                        component="p"
+                                        className="mt-1 text-sm text-red-500"
+                                    />
+                                </div>
+
+                                {/* Password */}
+                                <div>
+                                    <label className="block mb-2 font-semibold text-dark">
                                         Password
                                     </label>
 
                                     <Field
                                         name="password"
                                         type="password"
-                                        placeholder="At least 8 characters"
-                                        className="w-full border border-gray-300 border-solid rounded-full p-3"
+                                        placeholder="Min. 8 characters"
+                                        className="w-full rounded-full border border-gray-200 bg-white px-5 py-4 outline-none text-light focus:border-[#272757]"
                                     />
 
                                     <ErrorMessage
                                         name="password"
                                         component="p"
-                                        className="text-red-500 text-sm"
+                                        className="mt-1 text-sm text-red-500"
                                     />
                                 </div>
 
-                                <div>
-                                    <h3 className="font-semibold mb-3 text-sm">
-                                        I want to join as a...
-                                    </h3>
-
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <button
-                                            type="button"
-                                            onClick={() =>
-                                                setFieldValue("role", "Learner")
-                                            }
-                                            className={`border border-gray-300 border-solid rounded-full p-3 font-semibold ${values.role === "Learner"
-                                                ? "dark-border blue-bg  text-white"
-                                                : ""
-                                                }`}
-                                        >
-                                            Learner
-                                        </button>
-
-                                        <button
-                                            type="button"
-                                            onClick={() =>
-                                                setFieldValue("role", "Mentor")
-                                            }
-                                            className={`border border-gray-300 border-solid rounded-full p-3 font-semibold ${values.role === "Mentor"
-                                                ? "dark-border blue-bg text-white"
-                                                : ""
-                                                }`}
-                                        >
-                                            Mentor
-                                        </button>
-                                    </div>
+                                {/* Divider */}
+                                <div className="border-t border-gray-200 pt-7">
                                 </div>
 
-                                {values.role === "Mentor" && (
-                                    <div>
-                                        <h3 className="font-semibold mb-3 text-sm">
-                                            Skills I can teach
-                                        </h3>
+                                {/* Skills I Can Teach */}
+                                <div>
+                                    <label className="block mb-3 font-semibold text-dark">
+                                        I can teach (pick any)
+                                    </label>
 
-                                        <div className="flex flex-wrap gap-3">
+                                    <div className="max-h-52 overflow-y-auto pr-2">
+                                        <div className="flex flex-wrap gap-2">
+
                                             {skillsList.map((skill) => (
                                                 <button
                                                     key={skill}
@@ -228,63 +278,92 @@ const RegisterPage = () => {
                                                             setFieldValue
                                                         )
                                                     }
-                                                    className={`px-4 py-2 border border-gray-300 border-solid rounded-full text-sm ${values.skillsToTeach.includes(skill)
-                                                        ? "light-bg text-white"
-                                                        : ""
+                                                    className={`rounded-full border px-4 py-2 text-sm transition ${values.skillsToTeach.includes(skill)
+                                                            ? "border-[#272757] bg-[#272757] text-white"
+                                                            : "border-gray-200 bg-white text-light hover:border-[#272757]"
                                                         }`}
                                                 >
                                                     {skill}
                                                 </button>
                                             ))}
+
                                         </div>
                                     </div>
-                                )}
 
+                                    <ErrorMessage
+                                        name="skillsToTeach"
+                                        component="p"
+                                        className="mt-2 text-sm text-red-500"
+                                    />
+                                </div>
+
+                                {/* Divider */}
+                                <div className="border-t border-gray-200 pt-7">
+                                </div>
+
+                                {/* Skills I Want To Learn */}
                                 <div>
-                                    <h3 className="font-semibold mb-3 text-sm">
-                                        Skills I want to learn
-                                    </h3>
+                                    <label className="block mb-3 font-semibold text-dark">
+                                        I want to learn (pick any)
+                                    </label>
 
-                                    <div className="flex flex-wrap gap-3">
-                                        {skillsList.map((skill) => (
-                                            <button
-                                                key={skill}
-                                                type="button"
-                                                onClick={() =>
-                                                    toggleSkill(
-                                                        skill,
-                                                        "skillsToLearn",
-                                                        values,
-                                                        setFieldValue
-                                                    )
-                                                }
-                                                className={`px-4 py-2 border border-gray-300 border-solid rounded-full text-sm  ${values.skillsToLearn.includes(skill)
-                                                    ? "light-bg text-white"
-                                                    : ""
-                                                    }`}
-                                            >
-                                                {skill}
-                                            </button>
-                                        ))}
+                                    <div className="max-h-52 overflow-y-auto pr-2">
+                                        <div className="flex flex-wrap gap-2">
+
+                                            {skillsList.map((skill) => (
+                                                <button
+                                                    key={skill}
+                                                    type="button"
+                                                    onClick={() =>
+                                                        toggleSkill(
+                                                            skill,
+                                                            "skillsToLearn",
+                                                            values,
+                                                            setFieldValue
+                                                        )
+                                                    }
+                                                    className={`rounded-full border px-4 py-2 text-sm transition ${values.skillsToLearn.includes(skill)
+                                                            ? "border-[#272757] bg-[#272757] text-white"
+                                                            : "border-gray-200 bg-white text-light hover:border-[#272757]"
+                                                        }`}
+                                                >
+                                                    {skill}
+                                                </button>
+                                            ))}
+
+                                        </div>
                                     </div>
 
                                     <ErrorMessage
                                         name="skillsToLearn"
                                         component="p"
-                                        className="text-red-500 text-sm mt-2"
+                                        className="mt-2 text-sm text-red-500"
                                     />
                                 </div>
 
+                                {/* Submit */}
                                 <button
                                     type="submit"
-                                    className="w-full blue-bg text-white py-4 rounded-full p-3"
+                                    className="w-full rounded-full bg-[#32106f] px-5 py-4 text-sm font-semibold text-white transition hover:bg-[#45158d]"
                                 >
-                                    Create Account
+                                    Create free account
                                 </button>
-                                <p className="text-center">Already have an account? <Link to="/login" className="font-bold text-light">Sign in</Link></p>
+
+                                {/* Login */}
+                                <p className="text-center text-sm text-light">
+                                    Already have an account?{" "}
+                                    <Link
+                                        to="/login"
+                                        className="font-semibold text-dark hover:underline"
+                                    >
+                                        Sign in
+                                    </Link>
+                                </p>
+
                             </Form>
                         )}
                     </Formik>
+
                 </div>
             </section>
         </>

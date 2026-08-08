@@ -1,12 +1,13 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
-import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
-const LoginPage = () => {
+import { useAuthStore } from "../../store/authStore";
 
+const LoginPage = () => {
     const navigate = useNavigate();
+    const { login } = useAuthStore();
 
     const initialValues = {
         email: "",
@@ -18,9 +19,8 @@ const LoginPage = () => {
             .email("Invalid Email")
             .required("Email is required"),
 
-        password: Yup.string().required(
-            "Password is required"
-        ),
+        password: Yup.string()
+            .required("Password is required"),
     });
 
     const handleSubmit = (values) => {
@@ -34,81 +34,116 @@ const LoginPage = () => {
         );
 
         if (!user) {
-           toast.error('Invalid username or password')
+            toast.error("Invalid email or password");
             return;
         }
 
-        localStorage.setItem(
-            "currentUser",
-            JSON.stringify(user)
-        );
+        login(user);
 
-        toast.success('Login successful');
+        toast.success("Login successful");
 
+        // Everyone goes to the same dashboard
         navigate("/dashboard");
     };
 
     return (
-        <>
-            <section className="login-section section-bg py-16 md:py-24">
-                <div className='container mx-auto px-4 md:px-8 lg:px-16 wrapper'>
-                    {/* logo */}
-                    <div className="pb-10">
-                        <Link to='/' className='flex'><img src='../logo.svg' alt='skillwap' width='200px' className='mr-1' /></Link>
-                    </div>
-                    <h2 className="text-4xl font-bold pb-4">Welcome back</h2>
-                    <p className='text-lg text-light pb-8'>Sign in to continue learning.</p>
-                    <Formik
-                        initialValues={initialValues}
-                        validationSchema={validationSchema}
-                        onSubmit={handleSubmit}
+        <section className="login-section py-16 md:py-24">
+            <div className="container mx-auto px-4 md:px-8 lg:px-16 wrapper">
+
+                <h2 className="font-fraunces text-4xl font-bold pb-4 text-dark">
+                    Log in to SkillSwap
+                </h2>
+
+                <p className="text-lg text-light pb-8">
+                    Don't have an account?{" "}
+                    <Link
+                        to="/register"
+                        className="font-bold text-dark hover:underline font-medium"
                     >
-                        <Form className="space-y-5">
-                            <div>
-                                <Field
-                                    name="email"
-                                    type="email"
-                                    placeholder="Email"
-                                    className="w-full border border-gray-300 border-solid rounded-full p-3"
-                                />
+                        Sign up free
+                    </Link>
+                </p>
 
-                                <ErrorMessage
-                                    name="email"
-                                    component="p"
-                                    className="text-red-500 text-sm"
-                                />
+                <Formik
+                    initialValues={initialValues}
+                    validationSchema={validationSchema}
+                    onSubmit={handleSubmit}
+                >
+                    <Form className="space-y-5">
+
+                        {/* Email */}
+                        <div>
+                            <label className="block font-semibold text-dark mb-2">
+                                Email address
+                            </label>
+
+                            <Field
+                                name="email"
+                                type="email"
+                                placeholder="you@example.com"
+                                className="w-full border border-gray-300 rounded-full px-5 py-4 focus:outline-none bg-white"
+                            />
+
+                            <ErrorMessage
+                                name="email"
+                                component="p"
+                                className="text-red-500 text-sm mt-1"
+                            />
+                        </div>
+
+                        {/* Password */}
+                        <div>
+                            <div className="flex justify-between items-center mb-2">
+                                <label className="font-semibold text-dark">
+                                    Password
+                                </label>
+
+                                <Link
+                                    to="/forgot-password"
+                                    className="text-dark font-medium text-sm hover:underline font-medium"
+                                >
+                                    Forgot password?
+                                </Link>
                             </div>
 
-                            <div>
-                                <Field
-                                    name="password"
-                                    type="password"
-                                    placeholder="Password"
-                                    className="w-full border border-gray-300 border-solid rounded-full p-3"
-                                />
+                            <Field
+                                name="password"
+                                type="password"
+                                placeholder="••••••••"
+                                className="w-full border border-gray-300 rounded-full px-5 py-4 focus:outline-none bg-white"
+                            />
 
-                                <ErrorMessage
-                                    name="password"
-                                    component="p"
-                                    className="text-red-500 text-sm"
-                                />
-                            </div>
-                            <div className="text-right">
-                                <Link to="#" className="font-bold text-light">Forgot Password?</Link>
-                            </div>
-                            <button
-                                type="submit"
-                                className="w-full blue-bg text-white py-4 rounded-full p-3">
-                                Login
-                            </button>
+                            <ErrorMessage
+                                name="password"
+                                component="p"
+                                className="text-red-500 text-sm mt-1"
+                            />
+                        </div>
 
-                            <p className="text-center">New here? <Link to="/register" className="font-bold text-light">Create an account</Link></p>
-                        </Form>
-                    </Formik>
-                </div>
-            </section>
-        </>
-    )
+                        {/* Login button */}
+                        <button
+                            type="submit"
+                            className="w-full rounded-full bg-[#32106f] px-5 py-4 text-sm font-semibold text-white transition hover:bg-[#45158d]"
+                        >
+                            Log in
+                        </button>
+
+                        <p className="text-center text-sm text-light pt-4">
+                            By continuing, you agree to our{" "}
+                            <span className="underline">
+                                Terms of Service
+                            </span>{" "}
+                            and{" "}
+                            <span className="underline">
+                                Privacy Policy
+                            </span>.
+                        </p>
+
+                    </Form>
+                </Formik>
+            </div>
+        </section>
+    );
 };
 
-export default LoginPage 
+export default LoginPage
