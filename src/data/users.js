@@ -6,6 +6,7 @@ export const users = [
     rating: 4.9,
     sessions: 142,
     popular: true,
+    category: "Development",
     description:
       "Full-stack dev turned language enthusiast. I make Python and React easy to learn.",
     skillsToTeach: ["Python", "React"],
@@ -19,6 +20,7 @@ export const users = [
     rating: 4.8,
     sessions: 98,
     popular: false,
+    category: "Music",
     description:
       "Session musician with 15 years on stage. Let me help you find your sound.",
     skillsToTeach: ["Guitar", "Music Theory", "Piano"],
@@ -32,6 +34,7 @@ export const users = [
     rating: 4.7,
     sessions: 203,
     popular: true,
+    category: "Languages",
     description:
       "Chef by training, language lover by heart. Fluent in 4 languages, master of 3 cuisines.",
     skillsToTeach: ["Hindi", "Cooking", "Baking"],
@@ -45,9 +48,10 @@ export const users = [
     rating: 5.0,
     sessions: 311,
     popular: true,
+    category: "Design",
     description:
       "Award-winning photographer and UX designer. I teach both technical and creative skills.",
-    skillsToTeach: ["Photography", "UI/UX Design", "Figma"],
+    skillsToTeach: ["Digital Marketing", "UI/UX Design", "Figma"],
     skillsToLearn: ["French", "Music Theory"],
   },
 
@@ -58,6 +62,7 @@ export const users = [
     rating: 4.6,
     sessions: 77,
     popular: false,
+    category: "Creative",
     description:
       "Parisian yoga instructor and French literature graduate. Bonjour from the other side.",
     skillsToTeach: ["French", "Yoga", "Creative Writing"],
@@ -71,6 +76,7 @@ export const users = [
     rating: 4.8,
     sessions: 159,
     popular: false,
+    category: "Cooking",
     description:
       "Home cook and Spanish tutor. My tamale recipe alone is worth a session.",
     skillsToTeach: ["Cooking", "Spanish", "Italian Cuisine"],
@@ -84,6 +90,7 @@ export const users = [
     rating: 4.9,
     sessions: 88,
     popular: false,
+    category: "Creative",
     description:
       "Watercolor artist who believes everyone is creative. Art classes for all levels.",
     skillsToTeach: ["Watercolor", "Drawing", "Calligraphy"],
@@ -97,6 +104,7 @@ export const users = [
     rating: 4.7,
     sessions: 124,
     popular: false,
+    category: "Fitness",
     description:
       "Personal trainer and certified yoga instructor. Specializing in holistic fitness.",
     skillsToTeach: ["Fitness", "Yoga", "Running"],
@@ -110,6 +118,7 @@ export const users = [
     rating: 4.8,
     sessions: 67,
     popular: false,
+    category: "Development",
     description:
       "Japanese language teacher and software engineer. Combining technology and language.",
     skillsToTeach: ["Japanese", "Python", "React"],
@@ -123,10 +132,11 @@ export const users = [
     rating: 4.9,
     sessions: 192,
     popular: true,
+    category: "Design",
     description:
       "Senior product designer obsessed with craft and systems thinking.",
     skillsToTeach: ["UI/UX Design", "Figma", "Copywriting"],
-    skillsToLearn: ["Spanish", "Fitness"],
+    skillsToLearn: ["Spanish", "React"],
   },
 
   {
@@ -136,10 +146,11 @@ export const users = [
     rating: 4.6,
     sessions: 44,
     popular: false,
+    category: "Languages",
     description:
       "Calligrapher and Arabic language instructor. Bridging tradition and creativity.",
     skillsToTeach: ["Arabic", "Calligraphy", "Creative Writing"],
-    skillsToLearn: ["Python", "Photography"],
+    skillsToLearn: ["React", "Photography"],
   },
 
   {
@@ -149,6 +160,7 @@ export const users = [
     rating: 4.8,
     sessions: 211,
     popular: false,
+    category: "Music",
     description:
       "Classically trained pianist. Patient, encouraging teacher for beginners.",
     skillsToTeach: ["Piano", "Music Theory"],
