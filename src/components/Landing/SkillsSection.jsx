@@ -2,7 +2,7 @@ import { skills } from "../../data/skills";
 
 const SkillsSection = () => {
   return (
-    <section className="bg-[#f5f2f6] px-6 py-20 md:py-24" id="community">
+    <section className="bg-[#f5f2f6] px-6 py-20 md:py-24" id="categories">
       <div className="mx-auto max-w-6xl">
 
         {/* Heading */}

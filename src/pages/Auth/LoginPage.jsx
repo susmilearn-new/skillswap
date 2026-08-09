@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link, Navigate, useNavigate } from "react-router-dom";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import { toast } from "react-toastify";
@@ -42,7 +42,6 @@ const LoginPage = () => {
 
         toast.success("Login successful");
 
-        // Everyone goes to the same dashboard
         navigate("/dashboard");
     };
 

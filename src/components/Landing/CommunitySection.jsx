@@ -5,7 +5,7 @@ const CommunitySection = () => {
   const members = users.slice(0, 3);
 
   return (
-    <section className="bg-[#f8f7f3] px-6 py-16 md:py-20" id="categories">
+    <section className="bg-[#f8f7f3] px-6 py-16 md:py-20" id="community">
       <div className="mx-auto max-w-6xl">
 
         {/* Section heading */}

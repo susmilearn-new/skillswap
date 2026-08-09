@@ -3,9 +3,10 @@ import { persist } from "zustand/middleware";
 
 export const useAuthStore = create(
   persist(
-    (set) => ({
+    (set, get) => ({
       currentUser: null,
       isAuthenticated: false,
+      savedUserIds: [], // Track saved user IDs globally
 
       login: (user) =>
         set({
@@ -17,12 +18,25 @@ export const useAuthStore = create(
         set({
           currentUser: null,
           isAuthenticated: false,
+          savedUserIds: [], // Clears saved profiles on logout
         }),
 
       updateUser: (updatedUser) =>
         set({
           currentUser: updatedUser,
         }),
+
+      // Toggle bookmark status for a user ID
+      toggleSaveUser: (userId) => {
+        const currentSaved = get().savedUserIds;
+        const isAlreadySaved = currentSaved.includes(userId);
+        
+        set({
+          savedUserIds: isAlreadySaved
+            ? currentSaved.filter((id) => id !== userId)
+            : [...currentSaved, userId],
+        });
+      },
     }),
     {
       name: "auth-storage",
