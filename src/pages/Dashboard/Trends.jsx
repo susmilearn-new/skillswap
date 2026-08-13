@@ -1,8 +1,6 @@
 import React, { useMemo } from "react";
 import { Ribbon, Users, TrendingUp, ArrowRight } from "lucide-react";
 import {
-  AreaChart,
-  Area,
   BarChart,
   Bar,
   XAxis,
@@ -13,23 +11,6 @@ import {
 } from "recharts";
 import { users as initialMockUsers } from "../../data/users";
 
-// Predefined master list of all categories available on the platform
-// (You can also import this from your constants or categories file: import { categories } from "../../data/categories")
-const MASTER_CATEGORIES = [
-  "Python",
-  "UI/UX",
-  "Spanish",
-  "Guitar",
-  "Cooking",
-  "Yoga",
-  "French",
-  "Drawing",
-  "Music",
-  "Data Science",
-];
-
-const CATEGORY_COLORS = ["#7839ed", "#f97316", "#10b981", "#a855f7"];
-
 const Trends = () => {
   // 1. Fetch user data from localStorage or fallback mock
   const allUsers = useMemo(() => {
@@ -37,85 +18,72 @@ const Trends = () => {
     return localUsers.length > 0 ? localUsers : initialMockUsers;
   }, []);
 
-  // 2. Aggregate counts across ALL predefined master categories
+  // 2. Dynamically aggregate categories and metrics based on user data
   const analytics = useMemo(() => {
-    // Initialize every master category with 0 count
     const demandMap = {};
     const supplyMap = {};
+    const totalFrequencyMap = {};
 
-    MASTER_CATEGORIES.forEach((cat) => {
-      demandMap[cat] = 0;
-      supplyMap[cat] = 0;
-    });
+    // Helper to normalize and count skill occurrences
+    const processSkill = (skillString, mapToIncrement) => {
+      if (!skillString || typeof skillString !== "string") return;
+      
+      const cleanSkill = skillString.trim();
+      if (!cleanSkill) return;
 
-    // Populate user counts against master categories
+      // Find an existing skill key regardless of casing (e.g., "python" vs "Python")
+      const existingKey = Object.keys(totalFrequencyMap).find(
+        (k) => k.toLowerCase() === cleanSkill.toLowerCase()
+      );
+
+      const skillKey = existingKey || cleanSkill;
+
+      // Increment counts
+      mapToIncrement[skillKey] = (mapToIncrement[skillKey] || 0) + 1;
+      totalFrequencyMap[skillKey] = (totalFrequencyMap[skillKey] || 0) + 1;
+    };
+
+    // Aggregate counts dynamically across all users
     allUsers.forEach((user) => {
-      (user.skillsToLearn || []).forEach((skill) => {
-        const match = MASTER_CATEGORIES.find(
-          (cat) => cat.toLowerCase() === skill.trim().toLowerCase()
-        );
-        if (match) {
-          demandMap[match] += 1;
-        } else if (skill.trim()) {
-          // Dynamic fallback for any user skill outside the initial master list
-          demandMap[skill] = (demandMap[skill] || 0) + 1;
-        }
-      });
-
-      (user.skillsToTeach || []).forEach((skill) => {
-        const match = MASTER_CATEGORIES.find(
-          (cat) => cat.toLowerCase() === skill.trim().toLowerCase()
-        );
-        if (match) {
-          supplyMap[match] += 1;
-        } else if (skill.trim()) {
-          supplyMap[skill] = (supplyMap[skill] || 0) + 1;
-        }
-      });
+      (user.skillsToLearn || []).forEach((skill) =>
+        processSkill(skill, demandMap)
+      );
+      (user.skillsToTeach || []).forEach((skill) =>
+        processSkill(skill, supplyMap)
+      );
     });
 
-    const activeCategoriesList = Array.from(
-      new Set([...MASTER_CATEGORIES, ...Object.keys(demandMap)])
+    // Rank categories by total popularity (demand + supply)
+    const sortedDynamicCategories = Object.keys(totalFrequencyMap).sort(
+      (a, b) => totalFrequencyMap[b] - totalFrequencyMap[a]
     );
 
-    // Total master category count
-    const totalCategoriesCount = activeCategoriesList.length;
+    // Dynamic metrics
+    const totalCategoriesCount = sortedDynamicCategories.length;
     const totalActiveLearners = allUsers.length;
-    const totalSessions = Object.values(demandMap).reduce((a, b) => a + b, 0) * 8 + 40;
+    const totalSessions =
+      Object.values(demandMap).reduce((a, b) => a + b, 0) * 8 + 40;
 
-    // Bar Chart Data for full category spectrum (Supply vs Demand Gap)
-    const gapChartData = activeCategoriesList.map((category) => ({
+    // Bar Chart Data for top dynamic categories (Supply vs Demand Gap)
+    // Limits chart display to top 10 most common categories for cleaner visual layout
+    const chartCategories = sortedDynamicCategories.slice(0, 10);
+    const gapChartData = chartCategories.map((category) => ({
       skill: category,
-      Demand: (demandMap[category] || 0) * 15 + 20, // Scaled for chart representation
+      Demand: (demandMap[category] || 0) * 15 + 20,
       Supply: (supplyMap[category] || 0) * 10 + 5,
     }));
 
-    // Top 4 categories by overall platform demand
-    const sortedCategories = [...activeCategoriesList].sort(
+    // Top categories purely by demand
+    const topDemandCategories = [...sortedDynamicCategories].sort(
       (a, b) => (demandMap[b] || 0) - (demandMap[a] || 0)
     );
-    const top4Categories = sortedCategories.slice(0, 4);
-
-    // Monthly Trend Chart based on top categories
-    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul"];
-    const trendChartData = months.map((month, idx) => {
-      const monthData = { month };
-      const factor = (idx + 1) / months.length;
-      top4Categories.forEach((cat) => {
-        const baseDemand = (demandMap[cat] || 1) + 1;
-        monthData[cat] = Math.round(baseDemand * 25 * (0.5 + factor * 0.5));
-      });
-      return monthData;
-    });
 
     return {
       totalCategoriesCount,
       totalActiveLearners,
       totalSessions,
       gapChartData,
-      top4Categories,
-      trendChartData,
-      topRecommended: sortedCategories.slice(0, 3),
+      topRecommended: topDemandCategories.slice(0, 3),
     };
   }, [allUsers]);
 
@@ -176,89 +144,7 @@ const Trends = () => {
         </div>
       </div>
 
-      {/* Skill Demand Trends (Monthly Area Chart) */}
-      <div className="bg-white border border-[#e5e1dc] rounded-2xl p-6 shadow-sm">
-        <h2 className="text-lg font-bold text-[#26105f]">Skill Demand Trends</h2>
-        <p className="text-xs text-[#6b6290] mb-6">
-          Monthly learner interest by top platform categories — last 7 months
-        </p>
-
-        <div className="h-72 w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={analytics.trendChartData}>
-              <defs>
-                {analytics.top4Categories.map((cat, index) => (
-                  <linearGradient
-                    key={cat}
-                    id={`gradient-${index}`}
-                    x1="0"
-                    y1="0"
-                    x2="0"
-                    y2="1"
-                  >
-                    <stop
-                      offset="5%"
-                      stopColor={CATEGORY_COLORS[index % CATEGORY_COLORS.length]}
-                      stopOpacity={0.25}
-                    />
-                    <stop
-                      offset="95%"
-                      stopColor={CATEGORY_COLORS[index % CATEGORY_COLORS.length]}
-                      stopOpacity={0}
-                    />
-                  </linearGradient>
-                ))}
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0ebf8" />
-              <XAxis dataKey="month" stroke="#9b93be" fontSize={12} tickLine={false} />
-              <YAxis stroke="#9b93be" fontSize={12} tickLine={false} axisLine={false} />
-              <Tooltip
-                content={({ active, payload, label }) => {
-                  if (active && payload && payload.length) {
-                    return (
-                      <div className="bg-white border border-[#e5e1dc] p-3 rounded-xl shadow-md text-xs space-y-1">
-                        <p className="font-bold text-[#26105f] mb-1">{label}</p>
-                        {payload.map((item, idx) => (
-                          <p key={idx} style={{ color: item.color }} className="font-medium">
-                            {item.name} : {item.value}
-                          </p>
-                        ))}
-                      </div>
-                    );
-                  }
-                  return null;
-                }}
-              />
-              {analytics.top4Categories.map((cat, index) => (
-                <Area
-                  key={cat}
-                  type="monotone"
-                  dataKey={cat}
-                  stroke={CATEGORY_COLORS[index % CATEGORY_COLORS.length]}
-                  strokeWidth={2}
-                  fillOpacity={1}
-                  fill={`url(#gradient-${index})`}
-                />
-              ))}
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-
-        {/* Dynamic Category Legend */}
-        <div className="flex flex-wrap items-center justify-center gap-6 mt-4 text-xs font-semibold text-[#6b6290]">
-          {analytics.top4Categories.map((cat, index) => (
-            <span key={cat} className="flex items-center gap-1.5">
-              <span
-                className="w-2.5 h-2.5 rounded-full"
-                style={{ backgroundColor: CATEGORY_COLORS[index % CATEGORY_COLORS.length] }}
-              ></span>
-              {cat}
-            </span>
-          ))}
-        </div>
-      </div>
-
-      {/* Supply vs. Demand Gap for ALL Categories */}
+      {/* Supply vs. Demand Gap for Most Common Categories */}
       <div className="bg-white border border-[#e5e1dc] rounded-2xl p-6 shadow-sm">
         <h2 className="text-lg font-bold text-[#26105f]">Supply vs. Demand Gap</h2>
         <p className="text-xs text-[#6b6290] mb-6">
@@ -288,7 +174,7 @@ const Trends = () => {
         </div>
       </div>
 
-      {/* AI Learning Path Recommendations based on Full Category set */}
+      {/* AI Recommendations based on top dynamic skills */}
       <div className="bg-white border border-[#e5e1dc] rounded-2xl p-6 shadow-sm space-y-4">
         <div>
           <h2 className="text-lg font-bold text-[#26105f]">

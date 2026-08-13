@@ -1,4 +1,4 @@
-import { skills } from "../../data/skills";
+import { HomeSkills } from "../../data/HomeSkills";
 
 const SkillsSection = () => {
   return (
@@ -20,7 +20,7 @@ const SkillsSection = () => {
 
         {/* Skills */}
         <div className="mx-auto grid max-w-5xl grid-cols-2 gap-4 md:grid-cols-5">
-          {skills.map((skill) => {
+          {HomeSkills.map((skill) => {
             const Icon = skill.icon;
 
             return (

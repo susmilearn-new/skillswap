@@ -12,6 +12,7 @@ import Dashboard from "./pages/Dashboard/Dashboard";
 import ProtectedRoute from "./components/Common/ProtectedRoute";
 import Matches from "./pages/Dashboard/Matches";
 import Trends from "./pages/Dashboard/Trends";
+import Profile from "./pages/Dashboard/Profile";
 
 const AppRoutes = () => {
   return (
@@ -31,6 +32,7 @@ const AppRoutes = () => {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/matches" element={<Matches />} />
           <Route path="/trends" element={<Trends />} />
+          <Route path="/profile" element={<Profile />} />
         </Route>
       </Route>
 
