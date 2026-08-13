@@ -11,10 +11,7 @@ const Matches = () => {
     currentUser?.firstName ||
     currentUser?.fullName ||
     currentUser?.name ||
-    "Sarah Chen";
-
-  const userSkillsToTeach = currentUser?.skillsToTeach || ["Python", "React"];
-  const userSkillsToLearn = currentUser?.skillsToLearn || ["Guitar", "UI Design"];
+    "User";
 
   const currentUserInitials = currentUserName
     .split(" ")
@@ -46,19 +43,25 @@ const Matches = () => {
 
   // Filter ONLY users who have a valid skill match
   const matches = useMemo(() => {
+    // 1. Read live skills directly from currentUser state
+    const mySkillsToTeach = currentUser?.skillsToTeach || [];
+    const mySkillsToLearn = currentUser?.skillsToLearn || [];
+
+    if (!mySkillsToTeach.length && !mySkillsToLearn.length) return [];
+
     return users
       .filter((user) => user.id !== currentUserId) // Exclude current user
       .map((user) => {
-        // 1. What current user teaches that target user wants to learn
-        const userTeaches = userSkillsToTeach.filter((skill) =>
-          user.skillsToLearn.some(
+        // What current user teaches that target user wants to learn
+        const userTeaches = mySkillsToTeach.filter((skill) =>
+          (user.skillsToLearn || []).some(
             (s) => s.toLowerCase() === skill.toLowerCase()
           )
         );
 
-        // 2. What target user teaches that current user wants to learn
-        const matchTeaches = user.skillsToTeach.filter((skill) =>
-          userSkillsToLearn.some(
+        // What target user teaches that current user wants to learn
+        const matchTeaches = (user.skillsToTeach || []).filter((skill) =>
+          mySkillsToLearn.some(
             (s) => s.toLowerCase() === skill.toLowerCase()
           )
         );
@@ -76,7 +79,7 @@ const Matches = () => {
           scoreLabel = "Good";
         }
 
-        const initials = user.name
+        const initials = (user.name || "User")
           .split(" ")
           .map((w) => w[0])
           .join("")
@@ -87,7 +90,7 @@ const Matches = () => {
           id: user.id,
           name: user.name,
           initials,
-          avatarBg: getAvatarBg(user.name),
+          avatarBg: getAvatarBg(user.name || "User"),
           matchScore: `${scoreLabel} — ${matchPercentage}%`,
           scoreValue: matchPercentage,
           userTeaches,
@@ -95,10 +98,12 @@ const Matches = () => {
           totalMatches,
         };
       })
-      // CRITICAL STEP: Keep ONLY users with at least 1 skill overlap
+      // Keep ONLY users with at least 1 skill overlap
       .filter((match) => match.totalMatches > 0)
       .sort((a, b) => b.scoreValue - a.scoreValue);
-  }, [currentUserId, userSkillsToTeach, userSkillsToLearn]);
+
+    // 2. Depend directly on currentUser so any edit updates the matches!
+  }, [currentUser, currentUserId]);
 
   const handleSendRequest = (matchId) => {
     setRequestSentIds((prev) => [...prev, matchId]);

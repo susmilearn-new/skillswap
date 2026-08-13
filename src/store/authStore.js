@@ -26,11 +26,24 @@ export const useAuthStore = create(
           currentUser: updatedUser,
         }),
 
+      // Merges partial or full profile updates into the current user object
+      updateUserProfile: (updatedFields) => {
+        const currentUser = get().currentUser;
+        if (!currentUser) return;
+
+        set({
+          currentUser: {
+            ...currentUser,
+            ...updatedFields,
+          },
+        });
+      },
+
       // Toggle bookmark status for a user ID
       toggleSaveUser: (userId) => {
         const currentSaved = get().savedUserIds;
         const isAlreadySaved = currentSaved.includes(userId);
-        
+
         set({
           savedUserIds: isAlreadySaved
             ? currentSaved.filter((id) => id !== userId)

@@ -9,7 +9,7 @@ import {
   Dumbbell,
 } from "lucide-react";
 
-export const skills = [
+export const HomeSkills = [
   {
     id: 1,
     name: "Coding",

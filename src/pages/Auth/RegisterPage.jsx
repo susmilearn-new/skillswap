@@ -2,17 +2,7 @@ import { Formik, Form, Field, ErrorMessage } from "formik";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import * as Yup from "yup";
-
-
-const skillsList = [
-    "React",
-    "Node.js",
-    "Python",
-    "Java",
-    "UI/UX",
-    "Data Science",
-    "Digital Marketing",
-];
+import { skillsList } from "../../data/skillsList"
 
 const RegisterPage = () => {
 
