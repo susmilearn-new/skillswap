@@ -6,7 +6,29 @@ export const useAuthStore = create(
     (set, get) => ({
       currentUser: null,
       isAuthenticated: false,
-      savedUserIds: [], // Track saved user IDs globally
+
+      registeredUsers: [],
+
+      savedUserIds: [],
+
+      // Register new user
+      register: (user) => {
+        const users = get().registeredUsers;
+
+        const existingUser = users.find(
+          (existingUser) => existingUser.email === user.email
+        );
+
+        if (existingUser) {
+          return false;
+        }
+
+        set({
+          registeredUsers: [...users, user],
+        });
+
+        return true;
+      },
 
       login: (user) =>
         set({
@@ -18,7 +40,7 @@ export const useAuthStore = create(
         set({
           currentUser: null,
           isAuthenticated: false,
-          savedUserIds: [], // Clears saved profiles on logout
+          savedUserIds: [],
         }),
 
       updateUser: (updatedUser) =>
@@ -26,9 +48,9 @@ export const useAuthStore = create(
           currentUser: updatedUser,
         }),
 
-      // Merges partial or full profile updates into the current user object
       updateUserProfile: (updatedFields) => {
         const currentUser = get().currentUser;
+
         if (!currentUser) return;
 
         set({
@@ -39,7 +61,6 @@ export const useAuthStore = create(
         });
       },
 
-      // Toggle bookmark status for a user ID
       toggleSaveUser: (userId) => {
         const currentSaved = get().savedUserIds;
         const isAlreadySaved = currentSaved.includes(userId);

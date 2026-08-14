@@ -1,4 +1,4 @@
-import { Link, Navigate, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import { toast } from "react-toastify";
@@ -7,7 +7,8 @@ import { useAuthStore } from "../../store/authStore";
 
 const LoginPage = () => {
     const navigate = useNavigate();
-    const { login } = useAuthStore();
+
+    const { registeredUsers, login } = useAuthStore();
 
     const initialValues = {
         email: "",
@@ -24,10 +25,7 @@ const LoginPage = () => {
     });
 
     const handleSubmit = (values) => {
-        const users =
-            JSON.parse(localStorage.getItem("users")) || [];
-
-        const user = users.find(
+        const user = registeredUsers.find(
             (user) =>
                 user.email === values.email &&
                 user.password === values.password
@@ -57,7 +55,7 @@ const LoginPage = () => {
                     Don't have an account?{" "}
                     <Link
                         to="/register"
-                        className="font-bold text-dark hover:underline font-medium"
+                        className="font-bold text-dark hover:underline"
                     >
                         Sign up free
                     </Link>
@@ -99,7 +97,7 @@ const LoginPage = () => {
 
                                 <Link
                                     to="/forgot-password"
-                                    className="text-dark font-medium text-sm hover:underline font-medium"
+                                    className="text-dark text-sm hover:underline"
                                 >
                                     Forgot password?
                                 </Link>
@@ -145,4 +143,4 @@ const LoginPage = () => {
     );
 };
 
-export default LoginPage
+export default LoginPage;
