@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import * as Yup from "yup";
 import { skillsList } from "../../data/skillsList"
+import { useAuthStore } from "../../store/authStore";
 
 const RegisterPage = () => {
 
@@ -94,33 +95,26 @@ const RegisterPage = () => {
         setFieldValue(fieldName, updatedSkills);
     };
 
+    const { register } = useAuthStore();
+
     const handleSubmit = (values, { resetForm }) => {
-        const users =
-            JSON.parse(localStorage.getItem("users")) || [];
+        const success = register(values);
 
-        const existingUser = users.find(
-            (user) => user.email === values.email
-        );
-
-        if (existingUser) {
-            toast.error('Email already registerd')
+        if (!success) {
+            toast.error("Email already registered");
             return;
         }
 
-        users.push(values);
-
-        localStorage.setItem("users", JSON.stringify(users));
-
         resetForm();
 
-        toast.success('Registration Successfull');
+        toast.success("Registration Successful");
 
-        navigate('/login')
+        navigate("/login");
     };
 
     return (
         <>
-           
+
             <section className="min-h-screen bg-[#f8f7f4] py-12 md:py-16">
                 <div className="wrapper mx-auto px-4">
 
@@ -269,8 +263,8 @@ const RegisterPage = () => {
                                                         )
                                                     }
                                                     className={`rounded-full border px-4 py-2 text-sm transition ${values.skillsToTeach.includes(skill)
-                                                            ? "border-[#272757] bg-[#272757] text-white"
-                                                            : "border-gray-200 bg-white text-light hover:border-[#272757]"
+                                                        ? "border-[#272757] bg-[#272757] text-white"
+                                                        : "border-gray-200 bg-white text-light hover:border-[#272757]"
                                                         }`}
                                                 >
                                                     {skill}
@@ -313,8 +307,8 @@ const RegisterPage = () => {
                                                         )
                                                     }
                                                     className={`rounded-full border px-4 py-2 text-sm transition ${values.skillsToLearn.includes(skill)
-                                                            ? "border-[#272757] bg-[#272757] text-white"
-                                                            : "border-gray-200 bg-white text-light hover:border-[#272757]"
+                                                        ? "border-[#272757] bg-[#272757] text-white"
+                                                        : "border-gray-200 bg-white text-light hover:border-[#272757]"
                                                         }`}
                                                 >
                                                     {skill}
