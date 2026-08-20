@@ -1,16 +1,121 @@
-# React + Vite
+# SkillSwap
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+SkillSwap is a skill-exchange platform that helps people discover learning partners based on the skills they want to learn and the skills they can teach.
 
-Currently, two official plugins are available:
+Users can create a profile, manage their skills, discover skill matches, send exchange requests, and explore community skill trends through a personalized dashboard.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Live Demo
 
-## React Compiler
+https://skillswap-three-coral.vercel.app/
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Features
 
-## Expanding the ESLint configuration
+### Authentication
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- User registration
+- User login
+- Form validation using Formik and Yup
+- Protected dashboard access
+- Persistent authentication state using Zustand
+- Logout functionality
+
+### User Profile
+
+- View user information
+- Manage skills to learn
+- Manage skills to teach
+- Update profile information
+- Display user initials/avatar
+
+### Skill Matching
+
+- Match users based on compatible skills
+- Identify skills the current user can teach
+- Identify skills the matched user can teach
+- Calculate a match percentage
+- Sort matches based on match score
+- Send skill exchange requests
+- Request confirmation modal
+- Request sent state
+
+### Dashboard
+
+The dashboard provides an overview of the user's SkillSwap activity.
+
+It includes:
+
+- Dashboard overview
+- Skill matches
+- Skill demand insights
+- Saved users
+- Profile information
+- Community information
+
+### Skill Demand Insights
+
+The Trends page provides community-level skill insights.
+
+It includes:
+
+- Total skill categories
+- Active learner count
+- Session statistics
+- Supply vs. demand chart
+- Popular skill categories
+- Learning path recommendations
+
+### Community
+
+- Display community members
+- Show member location
+- Display skills users can teach
+- Display skills users want to learn
+- Show ratings and session information
+
+### Responsive Design
+
+The application is designed to work across:
+
+- Desktop
+- Tablet
+- Mobile
+
+Tailwind CSS is used for responsive layouts and styling.
+
+---
+
+## Tech Stack
+
+### Frontend
+
+- React
+- Vite
+- JavaScript
+- React Router DOM
+- Tailwind CSS
+
+### State Management
+
+- Zustand
+- Zustand Persist Middleware
+
+### Forms & Validation
+
+- Formik
+- Yup
+
+### UI & Icons
+
+- Lucide React
+
+### Charts
+
+- Recharts
+
+### Notifications
+
+- React Toastify
+
+### Deployment
+
+- Vercel
