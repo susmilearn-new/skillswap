@@ -1,79 +1,75 @@
+
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
 
-export const useAuthStore = create(
-  persist(
-    (set, get) => ({
-      currentUser: null,
-      isAuthenticated: false,
+export const useAuthStore = create((set, get) => ({
+    currentUser: null,
+    isAuthenticated: false,
+    savedUserIds: [],
 
-      registeredUsers: [],
-
-      savedUserIds: [],
-
-      // Register new user
-      register: (user) => {
-        const users = get().registeredUsers;
-
-        const existingUser = users.find(
-          (existingUser) => existingUser.email === user.email
-        );
-
-        if (existingUser) {
-          return false;
-        }
-
+    // Store the user returned by the login API
+    login: (user) =>
         set({
-          registeredUsers: [...users, user],
-        });
-
-        return true;
-      },
-
-      login: (user) =>
-        set({
-          currentUser: user,
-          isAuthenticated: true,
+            currentUser: user,
+            isAuthenticated: true,
         }),
 
-      logout: () =>
+    // Clear frontend authentication state
+    logout: () =>
         set({
-          currentUser: null,
-          isAuthenticated: false,
-          savedUserIds: [],
+            currentUser: null,
+            isAuthenticated: false,
+            savedUserIds: [],
         }),
 
-      updateUser: (updatedUser) =>
+    // Update the current user
+    updateUser: (updatedUser) =>
         set({
-          currentUser: updatedUser,
+            currentUser: updatedUser,
         }),
 
-      updateUserProfile: (updatedFields) => {
+    // Update only the supplied profile fields
+    updateUserProfile: (updatedFields) => {
         const currentUser = get().currentUser;
 
         if (!currentUser) return;
 
         set({
-          currentUser: {
-            ...currentUser,
-            ...updatedFields,
-          },
+            currentUser: {
+                ...currentUser,
+                ...updatedFields,
+            },
         });
-      },
+    },
 
-      toggleSaveUser: (userId) => {
+    // Toggle saved users in frontend state
+    toggleSaveUser: (userId) => {
         const currentSaved = get().savedUserIds;
-        const isAlreadySaved = currentSaved.includes(userId);
+        const id = String(userId);
+
+        const isAlreadySaved = currentSaved.some(
+            (savedId) => String(savedId) === id
+        );
 
         set({
-          savedUserIds: isAlreadySaved
-            ? currentSaved.filter((id) => id !== userId)
-            : [...currentSaved, userId],
+            savedUserIds: isAlreadySaved
+                ? currentSaved.filter(
+                    (savedId) => String(savedId) !== id
+                )
+                : [...currentSaved, id],
         });
-      },
-    }),
-    {
-      name: "auth-storage",
-    }
-  )
-);
+    },
+
+    // Restore the user from the backend cookie session
+    setCurrentUser: (user) =>
+        set({
+            currentUser: user,
+            isAuthenticated: Boolean(user),
+        }),
+
+    // Clear the user when the backend session is invalid
+    clearAuth: () =>
+        set({
+            currentUser: null,
+            isAuthenticated: false,
+        }),
+}));

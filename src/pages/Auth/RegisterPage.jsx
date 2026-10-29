@@ -3,7 +3,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import * as Yup from "yup";
 import { skillsList } from "../../data/skillsList"
-import { useAuthStore } from "../../store/authStore";
+import { registerUser } from "../../api/authApi";
+// import { useAuthStore } from "../../store/authStore";
 
 const RegisterPage = () => {
 
@@ -95,22 +96,49 @@ const RegisterPage = () => {
         setFieldValue(fieldName, updatedSkills);
     };
 
-    const { register } = useAuthStore();
+    // const { register } = useAuthStore();
 
-    const handleSubmit = (values, { resetForm }) => {
-        const success = register(values);
+    // const handleSubmit = (values, { resetForm }) => {
+    //     const success = register(values);
 
-        if (!success) {
-            toast.error("Email already registered");
-            return;
+    //     if (!success) {
+    //         toast.error("Email already registered");
+    //         return;
+    //     }
+    //     resetForm();
+    //     toast.success("Registration Successful");
+    //     navigate("/login");
+    // };
+
+
+    const handleSubmit = async (values, { resetForm, setSubmitting }) => {
+        try {
+            const userData = {
+                name: `${values.firstName.trim()} ${values.lastName.trim()}`,
+                email: values.email.trim().toLowerCase(),
+                password: values.password,
+                place: values.location.trim(),
+                skillsToTeach: values.skillsToTeach,
+                skillsToLearn: values.skillsToLearn,
+            };
+
+            await registerUser(userData);
+
+            resetForm();
+
+            toast.success("Registration successful! Please log in.");
+
+            navigate("/login");
+        } catch (error) {
+            toast.error(
+                error.response?.data?.message ||
+                "Registration failed. Please try again."
+            );
+        } finally {
+            setSubmitting(false);
         }
-
-        resetForm();
-
-        toast.success("Registration Successful");
-
-        navigate("/login");
     };
+
 
     return (
         <>
@@ -134,7 +162,7 @@ const RegisterPage = () => {
                         validationSchema={validationSchema}
                         onSubmit={handleSubmit}
                     >
-                        {({ values, setFieldValue }) => (
+                        {({ values, setFieldValue, isSubmitting }) => (
                             <Form className="space-y-6">
 
                                 {/* First + Last Name */}
@@ -326,12 +354,15 @@ const RegisterPage = () => {
                                 </div>
 
                                 {/* Submit */}
+
                                 <button
                                     type="submit"
-                                    className="w-full rounded-full bg-[#32106f] px-5 py-4 text-sm font-semibold text-white transition hover:bg-[#45158d]"
+                                    disabled={isSubmitting}
+                                    className="w-full rounded-full bg-[#32106f] px-5 py-4 text-sm font-semibold text-white transition hover:bg-[#45158d] disabled:opacity-60"
                                 >
-                                    Create free account
+                                    {isSubmitting ? "Creating account..." : "Create free account"}
                                 </button>
+
 
                                 {/* Login */}
                                 <p className="text-center text-sm text-light">

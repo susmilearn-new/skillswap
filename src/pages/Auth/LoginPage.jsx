@@ -1,14 +1,15 @@
+
 import { Link, useNavigate } from "react-router-dom";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import { toast } from "react-toastify";
 
+import { loginUser } from "../../api/authApi";
 import { useAuthStore } from "../../store/authStore";
 
 const LoginPage = () => {
     const navigate = useNavigate();
-
-    const { registeredUsers, login } = useAuthStore();
+    const login = useAuthStore((state) => state.login);
 
     const initialValues = {
         email: "",
@@ -24,23 +25,28 @@ const LoginPage = () => {
             .required("Password is required"),
     });
 
-    const handleSubmit = (values) => {
-        const user = registeredUsers.find(
-            (user) =>
-                user.email === values.email &&
-                user.password === values.password
-        );
+    const handleSubmit = async (values, { setSubmitting }) => {
+        try {
+            const response = await loginUser({
+                email: values.email.trim().toLowerCase(),
+                password: values.password,
+            });
 
-        if (!user) {
-            toast.error("Invalid email or password");
-            return;
+            const user = response.data.user;
+
+            // Store user details in Zustand, not the JWT token.
+            login(user);
+
+            toast.success("Login successful");
+            navigate("/dashboard");
+        } catch (error) {
+            toast.error(
+                error.response?.data?.message ||
+                "Login failed. Please try again."
+            );
+        } finally {
+            setSubmitting(false);
         }
-
-        login(user);
-
-        toast.success("Login successful");
-
-        navigate("/dashboard");
     };
 
     return (
@@ -66,77 +72,80 @@ const LoginPage = () => {
                     validationSchema={validationSchema}
                     onSubmit={handleSubmit}
                 >
-                    <Form className="space-y-5">
+                    {({ isSubmitting }) => (
+                        <Form className="space-y-5">
 
-                        {/* Email */}
-                        <div>
-                            <label className="block font-semibold text-dark mb-2">
-                                Email address
-                            </label>
-
-                            <Field
-                                name="email"
-                                type="email"
-                                placeholder="you@example.com"
-                                className="w-full border border-gray-300 rounded-full px-5 py-4 focus:outline-none bg-white"
-                            />
-
-                            <ErrorMessage
-                                name="email"
-                                component="p"
-                                className="text-red-500 text-sm mt-1"
-                            />
-                        </div>
-
-                        {/* Password */}
-                        <div>
-                            <div className="flex justify-between items-center mb-2">
-                                <label className="font-semibold text-dark">
-                                    Password
+                            {/* Email */}
+                            <div>
+                                <label className="block font-semibold text-dark mb-2">
+                                    Email address
                                 </label>
 
-                                <Link
-                                    to="/forgot-password"
-                                    className="text-dark text-sm hover:underline"
-                                >
-                                    Forgot password?
-                                </Link>
+                                <Field
+                                    name="email"
+                                    type="email"
+                                    placeholder="you@example.com"
+                                    className="w-full border border-gray-300 rounded-full px-5 py-4 focus:outline-none bg-white"
+                                />
+
+                                <ErrorMessage
+                                    name="email"
+                                    component="p"
+                                    className="text-red-500 text-sm mt-1"
+                                />
                             </div>
 
-                            <Field
-                                name="password"
-                                type="password"
-                                placeholder="••••••••"
-                                className="w-full border border-gray-300 rounded-full px-5 py-4 focus:outline-none bg-white"
-                            />
+                            {/* Password */}
+                            <div>
+                                <div className="flex justify-between items-center mb-2">
+                                    <label className="font-semibold text-dark">
+                                        Password
+                                    </label>
 
-                            <ErrorMessage
-                                name="password"
-                                component="p"
-                                className="text-red-500 text-sm mt-1"
-                            />
-                        </div>
+                                    <Link
+                                        to="/forgot-password"
+                                        className="text-dark text-sm hover:underline"
+                                    >
+                                        Forgot password?
+                                    </Link>
+                                </div>
 
-                        {/* Login button */}
-                        <button
-                            type="submit"
-                            className="w-full rounded-full bg-[#32106f] px-5 py-4 text-sm font-semibold text-white transition hover:bg-[#45158d]"
-                        >
-                            Log in
-                        </button>
+                                <Field
+                                    name="password"
+                                    type="password"
+                                    placeholder="••••••••"
+                                    className="w-full border border-gray-300 rounded-full px-5 py-4 focus:outline-none bg-white"
+                                />
 
-                        <p className="text-center text-sm text-light pt-4">
-                            By continuing, you agree to our{" "}
-                            <span className="underline">
-                                Terms of Service
-                            </span>{" "}
-                            and{" "}
-                            <span className="underline">
-                                Privacy Policy
-                            </span>.
-                        </p>
+                                <ErrorMessage
+                                    name="password"
+                                    component="p"
+                                    className="text-red-500 text-sm mt-1"
+                                />
+                            </div>
 
-                    </Form>
+                            {/* Login button */}
+                            <button
+                                type="submit"
+                                disabled={isSubmitting}
+                                className="w-full rounded-full bg-[#32106f] px-5 py-4 text-sm font-semibold text-white transition hover:bg-[#45158d] disabled:opacity-60"
+                            >
+                                {isSubmitting ? "Logging in..." : "Log in"}
+                            </button>
+
+                            <p className="text-center text-sm text-light pt-4">
+                                By continuing, you agree to our{" "}
+                                <span className="underline">
+                                    Terms of Service
+                                </span>{" "}
+                                and{" "}
+                                <span className="underline">
+                                    Privacy Policy
+                                </span>.
+                            </p>
+
+                        </Form>
+                    )}
                 </Formik>
             </div>
         </section>
