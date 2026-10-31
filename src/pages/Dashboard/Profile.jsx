@@ -1,41 +1,41 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { useAuthStore } from "../../store/authStore"; 
+import { getProfile, updateProfile } from "../../api/userApi";
+import { useAuthStore } from "../../store/authStore";
 import { skillsList } from "../../data/skillsList"
 
 const Profile = () => {
     const navigate = useNavigate();
 
-    // 1. Get currentUser state & update function directly from Zustand
-    const { currentUser, updateUserProfile } = useAuthStore();
+    const { currentUser, updateUser } = useAuthStore();
 
-    // Profile Details State
-    const [firstName, setFirstName] = useState("");
-    const [lastName, setLastName] = useState("");
-    const [location, setLocation] = useState("");
+    const [name, setName] = useState("");
+    const [place, setPlace] = useState("");
+    const [description, setDescription] = useState("");
+    const [category, setCategory] = useState("");
 
-    // Skills State
     const [skillsToTeach, setSkillsToTeach] = useState([]);
     const [skillsToLearn, setSkillsToLearn] = useState([]);
 
-    // Skill Inputs State
     const [teachInput, setTeachInput] = useState("");
     const [learnInput, setLearnInput] = useState("");
+    const [saving, setSaving] = useState(false);
 
-    // 2. Load currentUser data into form state on component mount
     useEffect(() => {
         if (currentUser) {
-            setFirstName(currentUser.firstName || "");
-            setLastName(currentUser.lastName || "");
-            setLocation(currentUser.location || "");
+            setName(currentUser.name || "");
+            setPlace(currentUser.place || "");
+            setDescription(currentUser.description || "");
+            setCategory(currentUser.category || "");
+
             setSkillsToTeach(currentUser.skillsToTeach || []);
             setSkillsToLearn(currentUser.skillsToLearn || []);
         } else {
-            // Redirect if not logged in
             navigate("/login");
         }
     }, [currentUser, navigate]);
+
 
     // Handlers to Add Skills
     const handleAddSkill = (skill, type) => {
@@ -68,65 +68,70 @@ const Profile = () => {
         }
     };
 
-    // 3. Save Changes: Update Zustand, Show Toast, and Redirect
-    const handleSaveChanges = (e) => {
+
+    const handleSaveChanges = async (e) => {
         e.preventDefault();
 
-        // Pass updated values to Zustand action
-        updateUserProfile({
-            firstName,
-            lastName,
-            location,
-            skillsToTeach,
-            skillsToLearn,
-        });
+        try {
+            setSaving(true);
 
-        // Trigger Toast & Redirect
-        toast.success("Profile saved successfully");
-        navigate("/dashboard");
+            const updatedData = {
+                name: name.trim(),
+                place: place.trim(),
+                description,
+                category,
+                skillsToTeach,
+                skillsToLearn,
+            };
+
+            const response = await updateProfile(updatedData);
+
+            updateUser(response.data.user);
+
+            toast.success("Profile updated successfully");
+
+            navigate("/dashboard");
+        } catch (error) {
+            toast.error(
+                error.response?.data?.message ||
+                "Failed to update profile. Please try again."
+            );
+        } finally {
+            setSaving(false);
+        }
     };
+
 
     if (!currentUser) return null;
 
     return (
         <section className="min-h-screen bg-[#f8f7f4] py-12 md:py-16">
             <div className="max-w-4xl mx-auto px-4">
-                
+
                 <h2 className="font-mono text-3xl font-bold text-[#1a064f] mb-8">
                     Edit Profile
                 </h2>
 
                 <form onSubmit={handleSaveChanges} className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 space-y-8">
-                    
+
                     {/* ----------------- PERSONAL INFORMATION ----------------- */}
                     <div className="space-y-4">
                         <h3 className="text-xl font-bold text-[#1a064f]">Personal Details</h3>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label className="block mb-2 font-semibold text-gray-700">First Name</label>
+                                <label className="block mb-2 font-semibold text-gray-700">
+                                    Name
+                                </label>
+
                                 <input
                                     type="text"
-                                    value={firstName}
-                                    onChange={(e) => setFirstName(e.target.value)}
+                                    value={name}
+                                    onChange={(e) => setName(e.target.value)}
                                     className="w-full rounded-2xl border border-gray-200 bg-[#f9f9f9] px-5 py-3.5 outline-none focus:border-[#200b52] focus:bg-white transition"
                                     required
                                 />
                             </div>
-
-                            <div>
-                                <label className="block mb-2 font-semibold text-gray-700">Last Name</label>
-                                <input
-                                    type="text"
-                                    value={lastName}
-                                    onChange={(e) => setLastName(e.target.value)}
-                                    className="w-full rounded-2xl border border-gray-200 bg-[#f9f9f9] px-5 py-3.5 outline-none focus:border-[#200b52] focus:bg-white transition"
-                                    required
-                                />
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label className="block mb-2 font-semibold text-gray-700">Email Address</label>
                                 <input
@@ -137,19 +142,53 @@ const Profile = () => {
                                 />
                             </div>
 
+
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
                             <div>
-                                <label className="block mb-2 font-semibold text-gray-700">Location</label>
+                                <label className="block mb-2 font-semibold text-gray-700">
+                                    Place
+                                </label>
+
                                 <input
                                     type="text"
-                                    value={location}
-                                    onChange={(e) => setLocation(e.target.value)}
+                                    value={place}
+                                    onChange={(e) => setPlace(e.target.value)}
                                     className="w-full rounded-2xl border border-gray-200 bg-[#f9f9f9] px-5 py-3.5 outline-none focus:border-[#200b52] focus:bg-white transition"
                                     required
                                 />
                             </div>
+                            <div>
+                                <label className="block mb-2 font-semibold text-gray-700">
+                                    Category
+                                </label>
+
+                                <input
+                                    type="text"
+                                    value={category}
+                                    onChange={(e) => setCategory(e.target.value)}
+                                    placeholder="Development, Design, Music..."
+                                    className="w-full rounded-2xl border border-gray-200 bg-[#f9f9f9] px-5 py-3.5 outline-none focus:border-[#200b52] focus:bg-white transition"
+                                />
+                            </div>
+
                         </div>
                     </div>
+                    <div>
+                        <label className="block mb-2 font-semibold text-gray-700">
+                            Description
+                        </label>
 
+                        <textarea
+                            value={description}
+                            onChange={(e) => setDescription(e.target.value)}
+                            placeholder="Tell us about yourself..."
+                            className="w-full rounded-2xl border border-gray-200 bg-[#f9f9f9] px-5 py-3.5 outline-none focus:border-[#200b52] focus:bg-white transition"
+                            rows="4"
+                        />
+                    </div>
                     <hr className="border-gray-100" />
 
                     {/* ----------------- SKILLS TO TEACH ----------------- */}
@@ -246,9 +285,10 @@ const Profile = () => {
 
                         <button
                             type="submit"
-                            className="rounded-full bg-[#200b52] px-6 py-3 text-sm font-medium text-white hover:bg-[#32127a] transition"
+                            disabled={saving}
+                            className="rounded-full bg-[#200b52] px-6 py-3 text-sm font-medium text-white hover:bg-[#32127a] transition disabled:opacity-60"
                         >
-                            Save Changes
+                            {saving ? "Saving..." : "Save Changes"}
                         </button>
                     </div>
 
