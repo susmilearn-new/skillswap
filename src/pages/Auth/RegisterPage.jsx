@@ -11,68 +11,38 @@ const RegisterPage = () => {
     const navigate = useNavigate();
 
     const initialValues = {
-        firstName: "",
-        lastName: "",
-        location: "",
+        name: "",
         email: "",
         password: "",
+        place: "",
+        description: "",
+        category: "",
         skillsToTeach: [],
         skillsToLearn: [],
     };
 
     const validationSchema = Yup.object({
-        firstName: Yup.string()
+        name: Yup.string()
             .trim()
-            .min(3, "First name must be at least 3 characters")
-            .max(50, "First name cannot exceed 50 characters")
-            .matches(
-                /^[a-zA-Z\s]+$/,
-                "First name can only contain letters and spaces"
-            )
-            .required("First name is required"),
-
-        lastName: Yup.string()
-            .trim()
-            .min(3, "Last name must be at least 3 characters")
-            .max(50, "Last name cannot exceed 50 characters")
-            .matches(
-                /^[a-zA-Z\s]+$/,
-                "Last name can only contain letters and spaces"
-            )
-            .required("Last name is required"),
-
-        location: Yup.string()
-            .trim()
-            .min(2, "Location must be at least 2 characters")
-            .max(100, "Location cannot exceed 100 characters")
-            .required("Location is required"),
+            .min(3, "Name must be at least 3 characters")
+            .max(100, "Name cannot exceed 100 characters")
+            .required("Name is required"),
 
         email: Yup.string()
-            .trim()
-            .lowercase()
             .email("Enter a valid email address")
             .required("Email is required"),
 
         password: Yup.string()
             .min(8, "Password must be at least 8 characters")
-            .max(32, "Password cannot exceed 32 characters")
-            .matches(
-                /[A-Z]/,
-                "Password must contain at least one uppercase letter"
-            )
-            .matches(
-                /[a-z]/,
-                "Password must contain at least one lowercase letter"
-            )
-            .matches(
-                /[0-9]/,
-                "Password must contain at least one number"
-            )
-            .matches(
-                /[@$!%*?&]/,
-                "Password must contain at least one special character (@$!%*?&)"
-            )
             .required("Password is required"),
+
+        place: Yup.string()
+            .trim()
+            .required("Location is required"),
+
+        description: Yup.string().max(500),
+
+        category: Yup.string().required("Category is required"),
 
         skillsToTeach: Yup.array()
             .min(1, "Select at least one skill to teach"),
@@ -96,21 +66,6 @@ const RegisterPage = () => {
         setFieldValue(fieldName, updatedSkills);
     };
 
-    // const { register } = useAuthStore();
-
-    // const handleSubmit = (values, { resetForm }) => {
-    //     const success = register(values);
-
-    //     if (!success) {
-    //         toast.error("Email already registered");
-    //         return;
-    //     }
-    //     resetForm();
-    //     toast.success("Registration Successful");
-    //     navigate("/login");
-    // };
-
-
     const handleSubmit = async (values, { resetForm, setSubmitting }) => {
         try {
             const userData = {
@@ -122,7 +77,12 @@ const RegisterPage = () => {
                 skillsToLearn: values.skillsToLearn,
             };
 
-            await registerUser(userData);
+            await registerUser({
+                ...values,
+                name: values.name.trim(),
+                email: values.email.trim().toLowerCase(),
+                place: values.place.trim(),
+            });
 
             resetForm();
 
