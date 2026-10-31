@@ -1,17 +1,52 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { getUsers } from "../../api/userApi";
+import { toast } from "react-toastify";
 import { useSearchParams } from "react-router-dom";
 import { Search, MapPin, Sparkles, Star, Bookmark, X, CheckCircle2, Flame } from "lucide-react";
-import { users } from "../../data/users";
+// import { users } from "../../data/users";
 import { useAuthStore } from "../../store/authStore";
 
 const Dashboard = () => {
+
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const response = await getUsers();
+
+        const backendUsers = response.data.users || response.data;
+
+        setUsers(
+          backendUsers.map((user) => ({
+            ...user,
+            id: user.id || user._id,
+            skillsToTeach: user.skillsToTeach || [],
+            skillsToLearn: user.skillsToLearn || [],
+            rating: user.rating || 0,
+            sessions: user.sessions || 0,
+          }))
+        );
+      } catch (error) {
+        toast.error(
+          error.response?.data?.message || "Failed to load community members"
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUsers();
+  }, []);
+
   const [searchParams, setSearchParams] = useSearchParams();
   const showSavedOnly = searchParams.get("saved") === "true";
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [showPopularOnly, setShowPopularOnly] = useState(false);
-  
+
   const { savedUserIds, toggleSaveUser } = useAuthStore();
   const [selectedUserForSwap, setSelectedUserForSwap] = useState(null);
   const [swapSuccess, setSwapSuccess] = useState(false);
@@ -70,6 +105,14 @@ const Dashboard = () => {
       setSelectedUserForSwap(null);
     }, 2000);
   };
+
+  if (loading) {
+  return (
+    <div className="p-10 text-center text-[#6b6290]">
+      Loading community members...
+    </div>
+  );
+}
 
   return (
     <div className="max-w-[1400px] mx-auto px-6 py-7 relative">
@@ -133,11 +176,10 @@ const Dashboard = () => {
               <button
                 key={cat}
                 onClick={() => setSelectedCategory(cat)}
-                className={`px-4 py-2 rounded-xl text-xs font-semibold transition ${
-                  selectedCategory === cat
+                className={`px-4 py-2 rounded-xl text-xs font-semibold transition ${selectedCategory === cat
                     ? "bg-[#26105f] text-white shadow-sm"
                     : "bg-white border border-[#e5e1dc] text-[#6b6290] hover:border-[#26105f]"
-                }`}
+                  }`}
               >
                 {cat}
               </button>
@@ -146,11 +188,10 @@ const Dashboard = () => {
             {/* Popular Filter Toggle */}
             <button
               onClick={() => setShowPopularOnly(!showPopularOnly)}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold transition ${
-                showPopularOnly
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold transition ${showPopularOnly
                   ? "bg-orange-500 text-white shadow-sm"
                   : "bg-white border border-[#e5e1dc] text-[#6b6290] hover:border-orange-500"
-              }`}
+                }`}
             >
               <Flame size={14} className={showPopularOnly ? "fill-white" : "text-orange-500"} />
               <span>Popular</span>
@@ -159,11 +200,10 @@ const Dashboard = () => {
             {/* Saved Filter Toggle */}
             <button
               onClick={handleToggleSavedOnly}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold transition ${
-                showSavedOnly
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold transition ${showSavedOnly
                   ? "bg-orange-500 text-white shadow-sm"
                   : "bg-white border border-[#e5e1dc] text-[#6b6290] hover:border-orange-500"
-              }`}
+                }`}
             >
               <Bookmark size={14} className={showSavedOnly ? "fill-white" : "text-orange-500"} />
               <span>Saved ({savedUserIds.length})</span>
@@ -184,11 +224,10 @@ const Dashboard = () => {
                   {/* Top Right Save/Bookmark Icon Button */}
                   <button
                     onClick={() => toggleSaveUser(user.id)}
-                    className={`absolute top-4 right-4 p-2 rounded-full border transition z-10 ${
-                      isSaved
+                    className={`absolute top-4 right-4 p-2 rounded-full border transition z-10 ${isSaved
                         ? "bg-orange-500 border-orange-500 text-white"
                         : "bg-white border-[#e5e1dc] text-[#6b6290] hover:border-[#26105f]"
-                    }`}
+                      }`}
                     title={isSaved ? "Saved" : "Save profile"}
                   >
                     <Bookmark size={14} className={isSaved ? "fill-white" : ""} />
@@ -215,7 +254,7 @@ const Dashboard = () => {
                         </span>
                       )}
                     </div>
-                    
+
                     <div className="flex items-center gap-1 text-xs text-[#6b6290] mb-2 mt-0.5">
                       <MapPin size={12} />
                       <span>{user.place}</span>
