@@ -3,13 +3,15 @@ import { getUsers } from "../../api/userApi";
 import { toast } from "react-toastify";
 import { useSearchParams } from "react-router-dom";
 import { Search, MapPin, Sparkles, Star, Bookmark, X, CheckCircle2, Flame } from "lucide-react";
-// import { users } from "../../data/users";
+import { getCatalogueSkills } from "../../api/skillCatalogueApi";
 import { useAuthStore } from "../../store/authStore";
 
 const Dashboard = () => {
 
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [categories, setCategories] = useState([]);
+  const [activeCategory, setActiveCategory] = useState("All");
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -40,6 +42,26 @@ const Dashboard = () => {
     fetchUsers();
   }, []);
 
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await getCatalogueSkills();
+
+        const uniqueCategories = [
+          ...new Set(
+            response.data.skills.map((skill) => skill.category)
+          ),
+        ];
+
+        setCategories(uniqueCategories);
+      } catch (error) {
+        console.error("Failed to fetch categories:", error);
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
   const [searchParams, setSearchParams] = useSearchParams();
   const showSavedOnly = searchParams.get("saved") === "true";
 
@@ -48,10 +70,20 @@ const Dashboard = () => {
   const [showPopularOnly, setShowPopularOnly] = useState(false);
 
   const { savedUserIds, toggleSaveUser } = useAuthStore();
+  const handleSaveUser = async (userId) => {
+    try {
+      await toggleSaveUser(userId);
+      toast.success("Saved profiles updated");
+    } catch (error) {
+      console.error("Save/Remove error:", error);
+
+      toast.error(
+        error.response?.data?.message || "Unable to update saved profile"
+      );
+    }
+  };
   const [selectedUserForSwap, setSelectedUserForSwap] = useState(null);
   const [swapSuccess, setSwapSuccess] = useState(false);
-
-  const categories = ["All", "Development", "Languages", "Design", "Music", "Creative", "Cooking", "Fitness"];
 
   const handleToggleSavedOnly = () => {
     if (showSavedOnly) {
@@ -72,20 +104,20 @@ const Dashboard = () => {
 
   // Filter users based on search query, category, popular flag, and saved status
   const filteredUsers = users.filter((user) => {
-    const query = searchQuery.toLowerCase();
-    const matchesName = user.name.toLowerCase().includes(query);
-    const matchesPlace = user.place.toLowerCase().includes(query);
-    const matchesSkills = [
-      ...user.skillsToTeach,
-      ...user.skillsToLearn,
-    ].some((skill) => skill.toLowerCase().includes(query));
+    // Category filter
+    const matchesCategory =
+      selectedCategory === "All" ||
+      user.category?.toLowerCase() === selectedCategory.toLowerCase();
 
-    const matchesSearch = matchesName || matchesPlace || matchesSkills;
-    const matchesCategory = selectedCategory === "All" || user.category === selectedCategory;
-    const matchesPopular = !showPopularOnly || user.popular;
-    const matchesSaved = !showSavedOnly || savedUserIds.includes(user.id);
+    // Popular filter
+    const matchesPopular =
+      !showPopularOnly || user.popular;
 
-    return matchesSearch && matchesCategory && matchesPopular && matchesSaved;
+    // Saved filter
+    const matchesSaved =
+      !showSavedOnly || savedUserIds.includes(user.id);
+
+    return matchesCategory && matchesPopular && matchesSaved;
   });
 
   const getInitials = (name) => {
@@ -107,12 +139,12 @@ const Dashboard = () => {
   };
 
   if (loading) {
-  return (
-    <div className="p-10 text-center text-[#6b6290]">
-      Loading community members...
-    </div>
-  );
-}
+    return (
+      <div className="p-10 text-center text-[#6b6290]">
+        Loading community members...
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-[1400px] mx-auto px-6 py-7 relative">
@@ -172,13 +204,26 @@ const Dashboard = () => {
 
           {/* Category, Popular & Saved Filter Bar */}
           <div className="flex flex-wrap items-center gap-2">
+
+            {/* All Category */}
+            <button
+              onClick={() => setSelectedCategory("All")}
+              className={`px-4 py-2 rounded-xl text-xs font-semibold transition ${selectedCategory === "All"
+                ? "bg-[#26105f] text-white shadow-sm"
+                : "bg-white border border-[#e5e1dc] text-[#6b6290] hover:border-[#26105f]"
+                }`}
+            >
+              All
+            </button>
+
+            {/* Dynamic Categories */}
             {categories.map((cat) => (
               <button
                 key={cat}
                 onClick={() => setSelectedCategory(cat)}
                 className={`px-4 py-2 rounded-xl text-xs font-semibold transition ${selectedCategory === cat
-                    ? "bg-[#26105f] text-white shadow-sm"
-                    : "bg-white border border-[#e5e1dc] text-[#6b6290] hover:border-[#26105f]"
+                  ? "bg-[#26105f] text-white shadow-sm"
+                  : "bg-white border border-[#e5e1dc] text-[#6b6290] hover:border-[#26105f]"
                   }`}
               >
                 {cat}
@@ -189,11 +234,14 @@ const Dashboard = () => {
             <button
               onClick={() => setShowPopularOnly(!showPopularOnly)}
               className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold transition ${showPopularOnly
-                  ? "bg-orange-500 text-white shadow-sm"
-                  : "bg-white border border-[#e5e1dc] text-[#6b6290] hover:border-orange-500"
+                ? "bg-orange-500 text-white shadow-sm"
+                : "bg-white border border-[#e5e1dc] text-[#6b6290] hover:border-orange-500"
                 }`}
             >
-              <Flame size={14} className={showPopularOnly ? "fill-white" : "text-orange-500"} />
+              <Flame
+                size={14}
+                className={showPopularOnly ? "fill-white" : "text-orange-500"}
+              />
               <span>Popular</span>
             </button>
 
@@ -201,13 +249,17 @@ const Dashboard = () => {
             <button
               onClick={handleToggleSavedOnly}
               className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold transition ${showSavedOnly
-                  ? "bg-orange-500 text-white shadow-sm"
-                  : "bg-white border border-[#e5e1dc] text-[#6b6290] hover:border-orange-500"
+                ? "bg-orange-500 text-white shadow-sm"
+                : "bg-white border border-[#e5e1dc] text-[#6b6290] hover:border-orange-500"
                 }`}
             >
-              <Bookmark size={14} className={showSavedOnly ? "fill-white" : "text-orange-500"} />
+              <Bookmark
+                size={14}
+                className={showSavedOnly ? "fill-white" : "text-orange-500"}
+              />
               <span>Saved ({savedUserIds.length})</span>
             </button>
+
           </div>
         </div>
 
@@ -223,10 +275,10 @@ const Dashboard = () => {
                 >
                   {/* Top Right Save/Bookmark Icon Button */}
                   <button
-                    onClick={() => toggleSaveUser(user.id)}
+                    onClick={() => handleSaveUser(user.id)}
                     className={`absolute top-4 right-4 p-2 rounded-full border transition z-10 ${isSaved
-                        ? "bg-orange-500 border-orange-500 text-white"
-                        : "bg-white border-[#e5e1dc] text-[#6b6290] hover:border-[#26105f]"
+                      ? "bg-orange-500 border-orange-500 text-white"
+                      : "bg-white border-[#e5e1dc] text-[#6b6290] hover:border-[#26105f]"
                       }`}
                     title={isSaved ? "Saved" : "Save profile"}
                   >

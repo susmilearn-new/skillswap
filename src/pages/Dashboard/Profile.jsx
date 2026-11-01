@@ -3,12 +3,16 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { getProfile, updateProfile } from "../../api/userApi";
 import { useAuthStore } from "../../store/authStore";
-import { skillsList } from "../../data/skillsList"
+import { getCatalogueSkills } from "../../api/skillCatalogueApi";
 
 const Profile = () => {
     const navigate = useNavigate();
 
     const { currentUser, updateUser } = useAuthStore();
+
+    const [skillsList, setSkillsList] = useState([]);
+    const [loadingSkills, setLoadingSkills] = useState(true);
+    const [categories, setCategories] = useState([]);
 
     const [name, setName] = useState("");
     const [place, setPlace] = useState("");
@@ -36,25 +40,62 @@ const Profile = () => {
         }
     }, [currentUser, navigate]);
 
+    useEffect(() => {
+        const fetchCatalogueSkills = async () => {
+            try {
+                const response = await getCatalogueSkills();
+                const skills = response.data.skills;
+
+                setSkillsList(skills.map(skill => skill.title));
+
+                setCategories([
+                    ...new Set(skills.map(skill => skill.category))
+                ]);
+
+            } catch (error) {
+                toast.error(
+                    error.response?.data?.message ||
+                    "Unable to load available skills"
+                );
+            } finally {
+                setLoadingSkills(false);
+            }
+        };
+
+        fetchCatalogueSkills();
+    }, []);
+
 
     // Handlers to Add Skills
     const handleAddSkill = (skill, type) => {
         const trimmedSkill = skill.trim();
+
         if (!trimmedSkill) return;
 
+        const catalogueSkill = skillsList.find(
+            (item) => item.toLowerCase() === trimmedSkill.toLowerCase()
+        );
+
+        if (!catalogueSkill) {
+            toast.error("Please select a skill from the available list");
+            return;
+        }
+
         if (type === "teach") {
-            if (skillsToTeach.some((s) => s.toLowerCase() === trimmedSkill.toLowerCase())) {
+            if (skillsToTeach.includes(catalogueSkill)) {
                 toast.info("Skill already added to 'Teach' list");
                 return;
             }
-            setSkillsToTeach([...skillsToTeach, trimmedSkill]);
+
+            setSkillsToTeach([...skillsToTeach, catalogueSkill]);
             setTeachInput("");
         } else {
-            if (skillsToLearn.some((s) => s.toLowerCase() === trimmedSkill.toLowerCase())) {
+            if (skillsToLearn.includes(catalogueSkill)) {
                 toast.info("Skill already added to 'Learn' list");
                 return;
             }
-            setSkillsToLearn([...skillsToLearn, trimmedSkill]);
+
+            setSkillsToLearn([...skillsToLearn, catalogueSkill]);
             setLearnInput("");
         }
     };
@@ -165,13 +206,19 @@ const Profile = () => {
                                     Category
                                 </label>
 
-                                <input
-                                    type="text"
+                                <select
                                     value={category}
                                     onChange={(e) => setCategory(e.target.value)}
-                                    placeholder="Development, Design, Music..."
                                     className="w-full rounded-2xl border border-gray-200 bg-[#f9f9f9] px-5 py-3.5 outline-none focus:border-[#200b52] focus:bg-white transition"
-                                />
+                                >
+                                    <option value="">Select a category</option>
+
+                                    {categories.map((item) => (
+                                        <option key={item} value={item}>
+                                            {item}
+                                        </option>
+                                    ))}
+                                </select>
                             </div>
 
                         </div>
@@ -194,6 +241,12 @@ const Profile = () => {
                     {/* ----------------- SKILLS TO TEACH ----------------- */}
                     <div className="space-y-4">
                         <h3 className="text-xl font-bold text-[#1a064f]">Skills You Can Teach</h3>
+
+                        {loadingSkills && (
+                            <p className="text-sm text-gray-500">
+                                Loading available skills...
+                            </p>
+                        )}
 
                         <div className="flex gap-3">
                             <input
