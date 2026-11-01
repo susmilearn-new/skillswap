@@ -1,19 +1,42 @@
 
 import { create } from "zustand";
+import {
+    getSavedUsers,
+    saveUser,
+    removeSavedUser,
+} from "../api/savedUserApi";
 
 export const useAuthStore = create((set, get) => ({
     currentUser: null,
     isAuthenticated: false,
     savedUserIds: [],
 
+    // Fetch saved profiles from MongoDB
+    fetchSavedUsers: async () => {
+        try {
+            const response = await getSavedUsers();
+
+            const savedIds = response.data.users.map(
+                (user) => String(user._id)
+            );
+
+            set({ savedUserIds: savedIds });
+        } catch (error) {
+            console.error("Failed to fetch saved profiles:", error);
+        }
+    },
+
     // Store the user returned by the login API
-    login: (user) =>
+    login: (user) => {
         set({
             currentUser: user,
             isAuthenticated: true,
-        }),
+        });
 
-    // Clear frontend authentication state
+        get().fetchSavedUsers();
+    },
+
+    // Logout
     logout: () =>
         set({
             currentUser: null,
@@ -27,7 +50,7 @@ export const useAuthStore = create((set, get) => ({
             currentUser: updatedUser,
         }),
 
-    // Update only the supplied profile fields
+    // Update only supplied profile fields
     updateUserProfile: (updatedFields) => {
         const currentUser = get().currentUser;
 
@@ -41,35 +64,53 @@ export const useAuthStore = create((set, get) => ({
         });
     },
 
-    // Toggle saved users in frontend state
-    toggleSaveUser: (userId) => {
-        const currentSaved = get().savedUserIds;
+    // Save or remove a profile in MongoDB
+    toggleSaveUser: async (userId) => {
         const id = String(userId);
+        const currentSaved = get().savedUserIds;
 
-        const isAlreadySaved = currentSaved.some(
-            (savedId) => String(savedId) === id
-        );
+        const isAlreadySaved = currentSaved.includes(id);
 
-        set({
-            savedUserIds: isAlreadySaved
-                ? currentSaved.filter(
-                    (savedId) => String(savedId) !== id
-                )
-                : [...currentSaved, id],
-        });
+        try {
+            if (isAlreadySaved) {
+                await removeSavedUser(id);
+
+                set({
+                    savedUserIds: currentSaved.filter(
+                        (savedId) => savedId !== id
+                    ),
+                });
+            } else {
+                await saveUser(id);
+
+                set({
+                    savedUserIds: [...currentSaved, id],
+                });
+            }
+        } catch (error) {
+            console.error("Failed to update saved profile:", error);
+            throw error;
+        }
     },
 
-    // Restore the user from the backend cookie session
-    setCurrentUser: (user) =>
+    // Restore user from backend cookie session
+    setCurrentUser: (user) => {
         set({
             currentUser: user,
             isAuthenticated: Boolean(user),
-        }),
+            savedUserIds: user ? get().savedUserIds : [],
+        });
 
-    // Clear the user when the backend session is invalid
+        if (user) {
+            get().fetchSavedUsers();
+        }
+    },
+
+    // Clear authentication
     clearAuth: () =>
         set({
             currentUser: null,
             isAuthenticated: false,
+            savedUserIds: [],
         }),
 }));

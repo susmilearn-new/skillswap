@@ -2,13 +2,48 @@ import { Formik, Form, Field, ErrorMessage } from "formik";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import * as Yup from "yup";
-import { skillsList } from "../../data/skillsList"
+import { useEffect, useState } from "react";
+import { getCatalogueSkills } from "../../api/skillCatalogueApi";
 import { registerUser } from "../../api/authApi";
-// import { useAuthStore } from "../../store/authStore";
 
 const RegisterPage = () => {
 
     const navigate = useNavigate();
+
+    const [skillsList, setSkillsList] = useState([]);
+    const [loadingSkills, setLoadingSkills] = useState(true);
+    const [categories, setCategories] = useState([]);
+
+    useEffect(() => {
+        const fetchCatalogueSkills = async () => {
+            try {
+                const response = await getCatalogueSkills();
+
+                const skills = response.data.skills.map(
+                    (skill) => skill.title
+
+                );
+
+                setSkillsList(skills);
+
+                // Get unique categories for the Category dropdown
+                setCategories([
+                    ...new Set(
+                        response.data.skills.map((skill) => skill.category)
+                    )
+                ]);
+            } catch (error) {
+                toast.error(
+                    error.response?.data?.message ||
+                    "Unable to load available skills"
+                );
+            } finally {
+                setLoadingSkills(false);
+            }
+        };
+
+        fetchCatalogueSkills();
+    }, []);
 
     const initialValues = {
         name: "",
@@ -68,15 +103,6 @@ const RegisterPage = () => {
 
     const handleSubmit = async (values, { resetForm, setSubmitting }) => {
         try {
-            const userData = {
-                name: `${values.firstName.trim()} ${values.lastName.trim()}`,
-                email: values.email.trim().toLowerCase(),
-                password: values.password,
-                place: values.location.trim(),
-                skillsToTeach: values.skillsToTeach,
-                skillsToLearn: values.skillsToLearn,
-            };
-
             await registerUser({
                 ...values,
                 name: values.name.trim(),
@@ -98,7 +124,6 @@ const RegisterPage = () => {
             setSubmitting(false);
         }
     };
-
 
     return (
         <>
@@ -130,43 +155,22 @@ const RegisterPage = () => {
 
                                     <div>
                                         <label className="block mb-2 font-semibold text-dark">
-                                            First name
+                                            Full name
                                         </label>
 
                                         <Field
-                                            name="firstName"
-                                            placeholder="Emma"
+                                            name="name"
+                                            placeholder="Emma Johnson"
                                             className="w-full rounded-full border border-gray-200 bg-white px-5 py-4 outline-none text-light focus:border-[#272757]"
                                         />
 
                                         <ErrorMessage
-                                            name="firstName"
+                                            name="name"
                                             component="p"
                                             className="mt-1 text-sm text-red-500"
                                         />
                                     </div>
-
-                                    <div>
-                                        <label className="block mb-2 font-semibold text-dark">
-                                            Last name
-                                        </label>
-
-                                        <Field
-                                            name="lastName"
-                                            placeholder="Johnson"
-                                            className="w-full rounded-full border border-gray-200 bg-white px-5 py-4 outline-none text-light focus:border-[#272757]"
-                                        />
-
-                                        <ErrorMessage
-                                            name="lastName"
-                                            component="p"
-                                            className="mt-1 text-sm text-red-500"
-                                        />
-                                    </div>
-
-                                </div>
-
-                                {/* Email */}
+                                     {/* Email */}
                                 <div>
                                     <label className="block mb-2 font-semibold text-dark">
                                         Email address
@@ -186,20 +190,50 @@ const RegisterPage = () => {
                                     />
                                 </div>
 
-                                {/* Location */}
+                                </div>
+
+                               
+
+                                {/* place */}
                                 <div>
                                     <label className="block mb-2 font-semibold text-dark">
-                                        Location
+                                        Place
                                     </label>
 
                                     <Field
-                                        name="location"
+                                        name="place"
                                         placeholder="London, UK"
                                         className="w-full rounded-full border border-gray-200 bg-white px-5 py-4 outline-none text-light focus:border-[#272757]"
                                     />
 
                                     <ErrorMessage
-                                        name="location"
+                                        name="place"
+                                        component="p"
+                                        className="mt-1 text-sm text-red-500"
+                                    />
+                                </div>
+                                {/* Category */}
+                                <div>
+                                    <label className="block mb-2 font-semibold text-dark">
+                                        Category
+                                    </label>
+
+                                    <Field
+                                        as="select"
+                                        name="category"
+                                        className="w-full rounded-full border border-gray-200 bg-white px-5 py-4 outline-none text-light focus:border-[#272757]"
+                                    >
+                                        <option value="">Select a category</option>
+
+                                        {categories.map((category) => (
+                                            <option key={category} value={category}>
+                                                {category}
+                                            </option>
+                                        ))}
+                                    </Field>
+
+                                    <ErrorMessage
+                                        name="category"
                                         component="p"
                                         className="mt-1 text-sm text-red-500"
                                     />
@@ -238,26 +272,36 @@ const RegisterPage = () => {
                                     <div className="max-h-52 overflow-y-auto pr-2">
                                         <div className="flex flex-wrap gap-2">
 
-                                            {skillsList.map((skill) => (
-                                                <button
-                                                    key={skill}
-                                                    type="button"
-                                                    onClick={() =>
-                                                        toggleSkill(
-                                                            skill,
-                                                            "skillsToTeach",
-                                                            values,
-                                                            setFieldValue
-                                                        )
-                                                    }
-                                                    className={`rounded-full border px-4 py-2 text-sm transition ${values.skillsToTeach.includes(skill)
-                                                        ? "border-[#272757] bg-[#272757] text-white"
-                                                        : "border-gray-200 bg-white text-light hover:border-[#272757]"
-                                                        }`}
-                                                >
-                                                    {skill}
-                                                </button>
-                                            ))}
+                                            {loadingSkills ? (
+                                                <p className="text-sm text-gray-500">
+                                                    Loading available skills...
+                                                </p>
+                                            ) : skillsList.length === 0 ? (
+                                                <p className="text-sm text-red-500">
+                                                    No skills available. Please try again later.
+                                                </p>
+                                            ) : (
+                                                skillsList.map((skill) => (
+                                                    <button
+                                                        key={skill}
+                                                        type="button"
+                                                        onClick={() =>
+                                                            toggleSkill(
+                                                                skill,
+                                                                "skillsToTeach",
+                                                                values,
+                                                                setFieldValue
+                                                            )
+                                                        }
+                                                        className={`rounded-full border px-4 py-2 text-sm transition ${values.skillsToTeach.includes(skill)
+                                                            ? "border-[#272757] bg-[#272757] text-white"
+                                                            : "border-gray-200 bg-white text-light hover:border-[#272757]"
+                                                            }`}
+                                                    >
+                                                        {skill}
+                                                    </button>
+                                                ))
+                                            )}
 
                                         </div>
                                     </div>
@@ -282,26 +326,36 @@ const RegisterPage = () => {
                                     <div className="max-h-52 overflow-y-auto pr-2">
                                         <div className="flex flex-wrap gap-2">
 
-                                            {skillsList.map((skill) => (
-                                                <button
-                                                    key={skill}
-                                                    type="button"
-                                                    onClick={() =>
-                                                        toggleSkill(
-                                                            skill,
-                                                            "skillsToLearn",
-                                                            values,
-                                                            setFieldValue
-                                                        )
-                                                    }
-                                                    className={`rounded-full border px-4 py-2 text-sm transition ${values.skillsToLearn.includes(skill)
-                                                        ? "border-[#272757] bg-[#272757] text-white"
-                                                        : "border-gray-200 bg-white text-light hover:border-[#272757]"
-                                                        }`}
-                                                >
-                                                    {skill}
-                                                </button>
-                                            ))}
+                                            {loadingSkills ? (
+                                                <p className="text-sm text-gray-500">
+                                                    Loading available skills...
+                                                </p>
+                                            ) : skillsList.length === 0 ? (
+                                                <p className="text-sm text-red-500">
+                                                    No skills available. Please try again later.
+                                                </p>
+                                            ) : (
+                                                skillsList.map((skill) => (
+                                                    <button
+                                                        key={skill}
+                                                        type="button"
+                                                        onClick={() =>
+                                                            toggleSkill(
+                                                                skill,
+                                                                "skillsToLearn",
+                                                                values,
+                                                                setFieldValue
+                                                            )
+                                                        }
+                                                        className={`rounded-full border px-4 py-2 text-sm transition ${values.skillsToLearn.includes(skill)
+                                                            ? "border-[#272757] bg-[#272757] text-white"
+                                                            : "border-gray-200 bg-white text-light hover:border-[#272757]"
+                                                            }`}
+                                                    >
+                                                        {skill}
+                                                    </button>
+                                                ))
+                                            )}
 
                                         </div>
                                     </div>

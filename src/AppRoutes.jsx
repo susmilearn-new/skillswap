@@ -13,6 +13,7 @@ import ProtectedRoute from "./components/Common/ProtectedRoute";
 import Matches from "./pages/Dashboard/Matches";
 import Trends from "./pages/Dashboard/Trends";
 import Profile from "./pages/Dashboard/Profile";
+import SwapRequests from "./pages/Dashboard/SwapRequests";
 
 const AppRoutes = () => {
   return (
@@ -33,6 +34,7 @@ const AppRoutes = () => {
           <Route path="/matches" element={<Matches />} />
           <Route path="/trends" element={<Trends />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/dashboard/swap-requests" element={<SwapRequests/>}/>
         </Route>
       </Route>
 

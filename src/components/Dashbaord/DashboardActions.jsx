@@ -1,3 +1,4 @@
+
 import UserMenu from "./UserMenu";
 import SavedButton from "./SavedButton";
 
@@ -8,11 +9,11 @@ const DashboardActions = ({
   savedCount,
   isSavedActive,
   onSavedClick,
+  onSwapRequestsClick,
   onLogout,
 }) => {
   return (
     <div className="hidden items-center gap-4 lg:flex">
-
       <SavedButton
         count={savedCount}
         active={isSavedActive}
@@ -23,9 +24,9 @@ const DashboardActions = ({
         name={name}
         email={email}
         initials={initials}
+        onSwapRequestsClick={onSwapRequestsClick}
         onLogout={onLogout}
       />
-
     </div>
   );
 };

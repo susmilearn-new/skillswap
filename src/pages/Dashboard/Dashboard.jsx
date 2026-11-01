@@ -3,13 +3,16 @@ import { getUsers } from "../../api/userApi";
 import { toast } from "react-toastify";
 import { useSearchParams } from "react-router-dom";
 import { Search, MapPin, Sparkles, Star, Bookmark, X, CheckCircle2, Flame } from "lucide-react";
-// import { users } from "../../data/users";
+import { getCatalogueSkills } from "../../api/skillCatalogueApi";
 import { useAuthStore } from "../../store/authStore";
+import { sendSwapRequest } from "../../api/swapRequestApi";
 
 const Dashboard = () => {
 
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [categories, setCategories] = useState([]);
+  const [activeCategory, setActiveCategory] = useState("All");
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -40,6 +43,26 @@ const Dashboard = () => {
     fetchUsers();
   }, []);
 
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await getCatalogueSkills();
+
+        const uniqueCategories = [
+          ...new Set(
+            response.data.skills.map((skill) => skill.category)
+          ),
+        ];
+
+        setCategories(uniqueCategories);
+      } catch (error) {
+        console.error("Failed to fetch categories:", error);
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
   const [searchParams, setSearchParams] = useSearchParams();
   const showSavedOnly = searchParams.get("saved") === "true";
 
@@ -47,11 +70,27 @@ const Dashboard = () => {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [showPopularOnly, setShowPopularOnly] = useState(false);
 
-  const { savedUserIds, toggleSaveUser } = useAuthStore();
+  const { savedUserIds, toggleSaveUser, currentUser } = useAuthStore();
+
+  const [skillOffered, setSkillOffered] = useState("");
+  const [skillWanted, setSkillWanted] = useState("");
+  const [introMessage, setIntroMessage] = useState("");
+  const [sendingRequest, setSendingRequest] = useState(false);
+
+  const handleSaveUser = async (userId) => {
+    try {
+      await toggleSaveUser(userId);
+      toast.success("Saved profiles updated");
+    } catch (error) {
+      console.error("Save/Remove error:", error);
+
+      toast.error(
+        error.response?.data?.message || "Unable to update saved profile"
+      );
+    }
+  };
   const [selectedUserForSwap, setSelectedUserForSwap] = useState(null);
   const [swapSuccess, setSwapSuccess] = useState(false);
-
-  const categories = ["All", "Development", "Languages", "Design", "Music", "Creative", "Cooking", "Fitness"];
 
   const handleToggleSavedOnly = () => {
     if (showSavedOnly) {
@@ -72,20 +111,20 @@ const Dashboard = () => {
 
   // Filter users based on search query, category, popular flag, and saved status
   const filteredUsers = users.filter((user) => {
-    const query = searchQuery.toLowerCase();
-    const matchesName = user.name.toLowerCase().includes(query);
-    const matchesPlace = user.place.toLowerCase().includes(query);
-    const matchesSkills = [
-      ...user.skillsToTeach,
-      ...user.skillsToLearn,
-    ].some((skill) => skill.toLowerCase().includes(query));
+    // Category filter
+    const matchesCategory =
+      selectedCategory === "All" ||
+      user.category?.toLowerCase() === selectedCategory.toLowerCase();
 
-    const matchesSearch = matchesName || matchesPlace || matchesSkills;
-    const matchesCategory = selectedCategory === "All" || user.category === selectedCategory;
-    const matchesPopular = !showPopularOnly || user.popular;
-    const matchesSaved = !showSavedOnly || savedUserIds.includes(user.id);
+    // Popular filter
+    const matchesPopular =
+      !showPopularOnly || user.popular;
 
-    return matchesSearch && matchesCategory && matchesPopular && matchesSaved;
+    // Saved filter
+    const matchesSaved =
+      !showSavedOnly || savedUserIds.includes(user.id);
+
+    return matchesCategory && matchesPopular && matchesSaved;
   });
 
   const getInitials = (name) => {
@@ -97,22 +136,58 @@ const Dashboard = () => {
       .toUpperCase();
   };
 
-  const handleSendRequest = (e) => {
-    e.preventDefault();
-    setSwapSuccess(true);
-    setTimeout(() => {
-      setSwapSuccess(false);
-      setSelectedUserForSwap(null);
-    }, 2000);
+
+  const handleOpenSwapModal = (user) => {
+    setSelectedUserForSwap(user);
+    setSkillOffered(currentUser?.skillsToTeach?.[0] || "");
+    setSkillWanted(user.skillsToTeach?.[0] || "");
+    setIntroMessage("");
+    setSwapSuccess(false);
   };
 
+  const handleSendRequest = async (e) => {
+    e.preventDefault();
+
+    if (!skillOffered || !skillWanted) {
+      toast.error("Please select both skills");
+      return;
+    }
+
+    try {
+      setSendingRequest(true);
+
+      await sendSwapRequest({
+        receiver: selectedUserForSwap.id,
+        skillOffered,
+        skillWanted,
+        message: introMessage,
+      });
+
+      setSwapSuccess(true);
+      toast.success("Swap request sent successfully!");
+
+      setTimeout(() => {
+        setSwapSuccess(false);
+        setSelectedUserForSwap(null);
+      }, 2000);
+
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message || "Failed to send swap request"
+      );
+    } finally {
+      setSendingRequest(false);
+    }
+  };
+
+
   if (loading) {
-  return (
-    <div className="p-10 text-center text-[#6b6290]">
-      Loading community members...
-    </div>
-  );
-}
+    return (
+      <div className="p-10 text-center text-[#6b6290]">
+        Loading community members...
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-[1400px] mx-auto px-6 py-7 relative">
@@ -172,13 +247,26 @@ const Dashboard = () => {
 
           {/* Category, Popular & Saved Filter Bar */}
           <div className="flex flex-wrap items-center gap-2">
+
+            {/* All Category */}
+            <button
+              onClick={() => setSelectedCategory("All")}
+              className={`px-4 py-2 rounded-xl text-xs font-semibold transition ${selectedCategory === "All"
+                ? "bg-[#26105f] text-white shadow-sm"
+                : "bg-white border border-[#e5e1dc] text-[#6b6290] hover:border-[#26105f]"
+                }`}
+            >
+              All
+            </button>
+
+            {/* Dynamic Categories */}
             {categories.map((cat) => (
               <button
                 key={cat}
                 onClick={() => setSelectedCategory(cat)}
                 className={`px-4 py-2 rounded-xl text-xs font-semibold transition ${selectedCategory === cat
-                    ? "bg-[#26105f] text-white shadow-sm"
-                    : "bg-white border border-[#e5e1dc] text-[#6b6290] hover:border-[#26105f]"
+                  ? "bg-[#26105f] text-white shadow-sm"
+                  : "bg-white border border-[#e5e1dc] text-[#6b6290] hover:border-[#26105f]"
                   }`}
               >
                 {cat}
@@ -189,11 +277,14 @@ const Dashboard = () => {
             <button
               onClick={() => setShowPopularOnly(!showPopularOnly)}
               className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold transition ${showPopularOnly
-                  ? "bg-orange-500 text-white shadow-sm"
-                  : "bg-white border border-[#e5e1dc] text-[#6b6290] hover:border-orange-500"
+                ? "bg-orange-500 text-white shadow-sm"
+                : "bg-white border border-[#e5e1dc] text-[#6b6290] hover:border-orange-500"
                 }`}
             >
-              <Flame size={14} className={showPopularOnly ? "fill-white" : "text-orange-500"} />
+              <Flame
+                size={14}
+                className={showPopularOnly ? "fill-white" : "text-orange-500"}
+              />
               <span>Popular</span>
             </button>
 
@@ -201,13 +292,17 @@ const Dashboard = () => {
             <button
               onClick={handleToggleSavedOnly}
               className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold transition ${showSavedOnly
-                  ? "bg-orange-500 text-white shadow-sm"
-                  : "bg-white border border-[#e5e1dc] text-[#6b6290] hover:border-orange-500"
+                ? "bg-orange-500 text-white shadow-sm"
+                : "bg-white border border-[#e5e1dc] text-[#6b6290] hover:border-orange-500"
                 }`}
             >
-              <Bookmark size={14} className={showSavedOnly ? "fill-white" : "text-orange-500"} />
+              <Bookmark
+                size={14}
+                className={showSavedOnly ? "fill-white" : "text-orange-500"}
+              />
               <span>Saved ({savedUserIds.length})</span>
             </button>
+
           </div>
         </div>
 
@@ -223,10 +318,10 @@ const Dashboard = () => {
                 >
                   {/* Top Right Save/Bookmark Icon Button */}
                   <button
-                    onClick={() => toggleSaveUser(user.id)}
+                    onClick={() => handleSaveUser(user.id)}
                     className={`absolute top-4 right-4 p-2 rounded-full border transition z-10 ${isSaved
-                        ? "bg-orange-500 border-orange-500 text-white"
-                        : "bg-white border-[#e5e1dc] text-[#6b6290] hover:border-[#26105f]"
+                      ? "bg-orange-500 border-orange-500 text-white"
+                      : "bg-white border-[#e5e1dc] text-[#6b6290] hover:border-[#26105f]"
                       }`}
                     title={isSaved ? "Saved" : "Save profile"}
                   >
@@ -301,7 +396,7 @@ const Dashboard = () => {
 
                   {/* Trigger Popup Button */}
                   <button
-                    onClick={() => setSelectedUserForSwap(user)}
+                    onClick={() => handleOpenSwapModal(user)}
                     className="w-full mt-2 border border-[#26105f] text-[#26105f] hover:bg-[#26105f] hover:text-white font-medium py-2 rounded-xl text-xs transition flex items-center justify-center gap-2 group"
                   >
                     <Sparkles size={14} className="text-orange-500 group-hover:text-white transition" />
@@ -361,40 +456,79 @@ const Dashboard = () => {
                   </div>
                 </div>
 
+
                 <form onSubmit={handleSendRequest} className="space-y-4">
+
+                  {/* Skill offered by logged-in user */}
                   <div>
                     <label className="block text-xs font-semibold uppercase tracking-wider text-[#6b6290] mb-1.5">
-                      Choose skill to offer in return:
+                      Choose skill you can teach:
                     </label>
-                    <select className="w-full border border-[#e5e1dc] rounded-xl p-2.5 text-sm bg-[#f8f7f4] text-[#26105f] outline-none focus:border-[#7839ed]">
-                      {selectedUserForSwap.skillsToLearn.map((skill, i) => (
+
+                    <select
+                      value={skillOffered}
+                      onChange={(e) => setSkillOffered(e.target.value)}
+                      required
+                      className="w-full border border-[#e5e1dc] rounded-xl p-2.5 text-sm bg-[#f8f7f4] text-[#26105f] outline-none focus:border-[#7839ed]"
+                    >
+                      <option value="">Select a skill</option>
+
+                      {(currentUser?.skillsToTeach || []).map((skill, i) => (
                         <option key={i} value={skill}>
-                          Teach them {skill}
+                          {skill}
                         </option>
                       ))}
-                      <option value="other">Another skill from my profile</option>
                     </select>
                   </div>
 
+                  {/* Skill the selected user can teach */}
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-[#6b6290] mb-1.5">
+                      Choose skill you want to learn:
+                    </label>
+
+                    <select
+                      value={skillWanted}
+                      onChange={(e) => setSkillWanted(e.target.value)}
+                      required
+                      className="w-full border border-[#e5e1dc] rounded-xl p-2.5 text-sm bg-[#f8f7f4] text-[#26105f] outline-none focus:border-[#7839ed]"
+                    >
+                      <option value="">Select a skill</option>
+
+                      {(selectedUserForSwap.skillsToTeach || []).map((skill, i) => (
+                        <option key={i} value={skill}>
+                          {skill}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Introductory message */}
                   <div>
                     <label className="block text-xs font-semibold uppercase tracking-wider text-[#6b6290] mb-1.5">
                       Introductory Message:
                     </label>
+
                     <textarea
                       rows={3}
-                      placeholder="Hi! I saw you want to learn... Let's connect!"
+                      value={introMessage}
+                      onChange={(e) => setIntroMessage(e.target.value)}
+                      placeholder="Hi! I would love to exchange skills with you..."
+                      maxLength={500}
                       className="w-full border border-[#e5e1dc] rounded-xl p-3 text-sm bg-[#f8f7f4] text-[#26105f] outline-none focus:border-[#7839ed] resize-none"
-                      required
                     />
                   </div>
 
                   <button
                     type="submit"
-                    className="w-full bg-[#26105f] hover:bg-[#32106f] text-white font-semibold py-3 rounded-xl text-sm transition shadow-md"
+                    disabled={sendingRequest}
+                    className="w-full bg-[#26105f] hover:bg-[#32106f] disabled:opacity-60 text-white font-semibold py-3 rounded-xl text-sm transition shadow-md"
                   >
-                    Send Swap Request
+                    {sendingRequest ? "Sending..." : "Send Swap Request"}
                   </button>
+
                 </form>
+
               </div>
             )}
           </div>
