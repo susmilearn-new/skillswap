@@ -3,6 +3,7 @@ import {
   Bookmark,
   LogOut,
   User,
+  ArrowLeftRight,
 } from "lucide-react";
 import {
   Bars3Icon,
@@ -20,12 +21,12 @@ const MobileMenu = ({
   isSavedActive,
   onSavedClick,
   onLogout,
+  onSwapRequestsClick,
 }) => {
   const getMobileLinkClass = (active) =>
-    `rounded-xl px-4 py-2.5 text-sm font-medium transition ${
-      active
-        ? "bg-[#eee9f8] text-[#26105f]"
-        : "text-[#6b6290] hover:bg-gray-100"
+    `rounded-xl px-4 py-2.5 text-sm font-medium transition ${active
+      ? "bg-[#eee9f8] text-[#26105f]"
+      : "text-[#6b6290] hover:bg-gray-100"
     }`;
 
   return (
@@ -108,11 +109,10 @@ const MobileMenu = ({
                 onSavedClick();
                 setOpen(false);
               }}
-              className={`flex items-center justify-between rounded-xl px-4 py-2.5 text-sm font-medium transition ${
-                isSavedActive
+              className={`flex items-center justify-between rounded-xl px-4 py-2.5 text-sm font-medium transition ${isSavedActive
                   ? "border border-orange-200 bg-orange-50 text-orange-600"
                   : "text-[#6b6290] hover:bg-gray-100"
-              }`}
+                }`}
             >
               <div className="flex items-center gap-2">
                 <Bookmark
@@ -130,6 +130,21 @@ const MobileMenu = ({
               <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-orange-500 px-1.5 text-xs font-bold text-white">
                 {savedCount}
               </span>
+            </button>
+
+            {/* Swap Requests */}
+            <button
+              onClick={() => {
+                onSwapRequestsClick();
+                setOpen(false);
+              }}
+              className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition ${pathname === "/dashboard/swap-requests"
+                  ? "bg-[#eee9f8] text-[#26105f]"
+                  : "text-[#6b6290] hover:bg-gray-100"
+                }`}
+            >
+              <ArrowLeftRight size={16} />
+              Swap Requests
             </button>
 
             {/* Profile + Logout */}

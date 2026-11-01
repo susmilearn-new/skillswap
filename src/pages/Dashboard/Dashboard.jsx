@@ -5,6 +5,7 @@ import { useSearchParams } from "react-router-dom";
 import { Search, MapPin, Sparkles, Star, Bookmark, X, CheckCircle2, Flame } from "lucide-react";
 import { getCatalogueSkills } from "../../api/skillCatalogueApi";
 import { useAuthStore } from "../../store/authStore";
+import { sendSwapRequest } from "../../api/swapRequestApi";
 
 const Dashboard = () => {
 
@@ -69,7 +70,13 @@ const Dashboard = () => {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [showPopularOnly, setShowPopularOnly] = useState(false);
 
-  const { savedUserIds, toggleSaveUser } = useAuthStore();
+  const { savedUserIds, toggleSaveUser, currentUser } = useAuthStore();
+
+  const [skillOffered, setSkillOffered] = useState("");
+  const [skillWanted, setSkillWanted] = useState("");
+  const [introMessage, setIntroMessage] = useState("");
+  const [sendingRequest, setSendingRequest] = useState(false);
+
   const handleSaveUser = async (userId) => {
     try {
       await toggleSaveUser(userId);
@@ -129,14 +136,50 @@ const Dashboard = () => {
       .toUpperCase();
   };
 
-  const handleSendRequest = (e) => {
-    e.preventDefault();
-    setSwapSuccess(true);
-    setTimeout(() => {
-      setSwapSuccess(false);
-      setSelectedUserForSwap(null);
-    }, 2000);
+
+  const handleOpenSwapModal = (user) => {
+    setSelectedUserForSwap(user);
+    setSkillOffered(currentUser?.skillsToTeach?.[0] || "");
+    setSkillWanted(user.skillsToTeach?.[0] || "");
+    setIntroMessage("");
+    setSwapSuccess(false);
   };
+
+  const handleSendRequest = async (e) => {
+    e.preventDefault();
+
+    if (!skillOffered || !skillWanted) {
+      toast.error("Please select both skills");
+      return;
+    }
+
+    try {
+      setSendingRequest(true);
+
+      await sendSwapRequest({
+        receiver: selectedUserForSwap.id,
+        skillOffered,
+        skillWanted,
+        message: introMessage,
+      });
+
+      setSwapSuccess(true);
+      toast.success("Swap request sent successfully!");
+
+      setTimeout(() => {
+        setSwapSuccess(false);
+        setSelectedUserForSwap(null);
+      }, 2000);
+
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message || "Failed to send swap request"
+      );
+    } finally {
+      setSendingRequest(false);
+    }
+  };
+
 
   if (loading) {
     return (
@@ -353,7 +396,7 @@ const Dashboard = () => {
 
                   {/* Trigger Popup Button */}
                   <button
-                    onClick={() => setSelectedUserForSwap(user)}
+                    onClick={() => handleOpenSwapModal(user)}
                     className="w-full mt-2 border border-[#26105f] text-[#26105f] hover:bg-[#26105f] hover:text-white font-medium py-2 rounded-xl text-xs transition flex items-center justify-center gap-2 group"
                   >
                     <Sparkles size={14} className="text-orange-500 group-hover:text-white transition" />
@@ -413,40 +456,79 @@ const Dashboard = () => {
                   </div>
                 </div>
 
+
                 <form onSubmit={handleSendRequest} className="space-y-4">
+
+                  {/* Skill offered by logged-in user */}
                   <div>
                     <label className="block text-xs font-semibold uppercase tracking-wider text-[#6b6290] mb-1.5">
-                      Choose skill to offer in return:
+                      Choose skill you can teach:
                     </label>
-                    <select className="w-full border border-[#e5e1dc] rounded-xl p-2.5 text-sm bg-[#f8f7f4] text-[#26105f] outline-none focus:border-[#7839ed]">
-                      {selectedUserForSwap.skillsToLearn.map((skill, i) => (
+
+                    <select
+                      value={skillOffered}
+                      onChange={(e) => setSkillOffered(e.target.value)}
+                      required
+                      className="w-full border border-[#e5e1dc] rounded-xl p-2.5 text-sm bg-[#f8f7f4] text-[#26105f] outline-none focus:border-[#7839ed]"
+                    >
+                      <option value="">Select a skill</option>
+
+                      {(currentUser?.skillsToTeach || []).map((skill, i) => (
                         <option key={i} value={skill}>
-                          Teach them {skill}
+                          {skill}
                         </option>
                       ))}
-                      <option value="other">Another skill from my profile</option>
                     </select>
                   </div>
 
+                  {/* Skill the selected user can teach */}
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-[#6b6290] mb-1.5">
+                      Choose skill you want to learn:
+                    </label>
+
+                    <select
+                      value={skillWanted}
+                      onChange={(e) => setSkillWanted(e.target.value)}
+                      required
+                      className="w-full border border-[#e5e1dc] rounded-xl p-2.5 text-sm bg-[#f8f7f4] text-[#26105f] outline-none focus:border-[#7839ed]"
+                    >
+                      <option value="">Select a skill</option>
+
+                      {(selectedUserForSwap.skillsToTeach || []).map((skill, i) => (
+                        <option key={i} value={skill}>
+                          {skill}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Introductory message */}
                   <div>
                     <label className="block text-xs font-semibold uppercase tracking-wider text-[#6b6290] mb-1.5">
                       Introductory Message:
                     </label>
+
                     <textarea
                       rows={3}
-                      placeholder="Hi! I saw you want to learn... Let's connect!"
+                      value={introMessage}
+                      onChange={(e) => setIntroMessage(e.target.value)}
+                      placeholder="Hi! I would love to exchange skills with you..."
+                      maxLength={500}
                       className="w-full border border-[#e5e1dc] rounded-xl p-3 text-sm bg-[#f8f7f4] text-[#26105f] outline-none focus:border-[#7839ed] resize-none"
-                      required
                     />
                   </div>
 
                   <button
                     type="submit"
-                    className="w-full bg-[#26105f] hover:bg-[#32106f] text-white font-semibold py-3 rounded-xl text-sm transition shadow-md"
+                    disabled={sendingRequest}
+                    className="w-full bg-[#26105f] hover:bg-[#32106f] disabled:opacity-60 text-white font-semibold py-3 rounded-xl text-sm transition shadow-md"
                   >
-                    Send Swap Request
+                    {sendingRequest ? "Sending..." : "Send Swap Request"}
                   </button>
+
                 </form>
+
               </div>
             )}
           </div>

@@ -24,6 +24,10 @@ const DashboardLayout = () => {
     }
   };
 
+  const handleSwapRequestsClick = () => {
+  navigate("/dashboard/swap-requests");
+};
+
   const handleConfirmLogout = () => {
     logout();
 
@@ -38,6 +42,7 @@ const DashboardLayout = () => {
       <DashboardHeader
         isSavedActive={isSavedActive}
         onSavedClick={handleSavedClick}
+        onSwapRequestsClick={handleSwapRequestsClick}
         onLogout={() => setShowLogoutModal(true)}
       />
 

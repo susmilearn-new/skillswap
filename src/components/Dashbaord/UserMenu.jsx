@@ -1,9 +1,11 @@
+
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   ChevronDown,
   LogOut,
   User,
+  ArrowLeftRight,
 } from "lucide-react";
 
 const UserMenu = ({
@@ -11,9 +13,9 @@ const UserMenu = ({
   email,
   initials,
   onLogout,
+  onSwapRequestsClick,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
-
   const dropdownRef = useRef(null);
 
   useEffect(() => {
@@ -26,24 +28,15 @@ const UserMenu = ({
       }
     };
 
-    document.addEventListener(
-      "mousedown",
-      handleClickOutside
-    );
+    document.addEventListener("mousedown", handleClickOutside);
 
     return () => {
-      document.removeEventListener(
-        "mousedown",
-        handleClickOutside
-      );
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
   return (
-    <div
-      className="relative"
-      ref={dropdownRef}
-    >
+    <div className="relative" ref={dropdownRef}>
       {/* Avatar Button */}
       <button
         onClick={() => setIsOpen((prev) => !prev)}
@@ -82,13 +75,24 @@ const UserMenu = ({
             onClick={() => setIsOpen(false)}
             className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-[#26105f] transition hover:bg-[#f0ebf8]"
           >
-            <User
+            <User size={16} className="text-[#7839ed]" />
+            Edit Profile
+          </Link>
+
+          {/* Swap Requests */}
+          <button
+            onClick={() => {
+              setIsOpen(false);
+              onSwapRequestsClick();
+            }}
+            className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm font-medium text-[#26105f] transition hover:bg-[#f0ebf8]"
+          >
+            <ArrowLeftRight
               size={16}
               className="text-[#7839ed]"
             />
-
-            Edit Profile
-          </Link>
+            Swap Requests
+          </button>
 
           {/* Logout */}
           <button
@@ -98,11 +102,7 @@ const UserMenu = ({
             }}
             className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm font-medium text-red-600 transition hover:bg-red-50"
           >
-            <LogOut
-              size={16}
-              className="text-red-500"
-            />
-
+            <LogOut size={16} className="text-red-500" />
             Logout
           </button>
 

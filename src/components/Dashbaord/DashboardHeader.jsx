@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useLocation } from "react-router-dom";
 
@@ -10,6 +11,7 @@ import MobileMenu from "./MobileMenu";
 const DashboardHeader = ({
   isSavedActive,
   onSavedClick,
+  onSwapRequestsClick,
   onLogout,
 }) => {
   const { currentUser, savedUserIds } = useAuthStore();
@@ -24,8 +26,7 @@ const DashboardHeader = ({
     currentUser?.name ||
     "User";
 
-  const email =
-    currentUser?.email || "user@skillswap.com";
+  const email = currentUser?.email || "user@skillswap.com";
 
   const initials = name
     .split(" ")
@@ -37,11 +38,8 @@ const DashboardHeader = ({
   return (
     <header className="relative z-20 border-b border-[#e5e1dc] bg-[#f8f7f4]">
       <div className="mx-auto max-w-[1400px] px-6 lg:px-10">
-
-        {/* Header Top */}
         <div className="flex h-16 items-center justify-between">
 
-          {/* Logo */}
           <a
             href="/dashboard"
             className="text-2xl font-bold text-[#26105f]"
@@ -49,13 +47,11 @@ const DashboardHeader = ({
             SkillSwap
           </a>
 
-          {/* Desktop Navigation */}
           <DesktopNav
             pathname={location.pathname}
             isSavedActive={isSavedActive}
           />
 
-          {/* Desktop Actions */}
           <DashboardActions
             name={name}
             email={email}
@@ -63,10 +59,10 @@ const DashboardHeader = ({
             savedCount={savedUserIds?.length || 0}
             isSavedActive={isSavedActive}
             onSavedClick={onSavedClick}
+            onSwapRequestsClick={onSwapRequestsClick}
             onLogout={onLogout}
           />
 
-          {/* Mobile Menu */}
           <MobileMenu
             open={mobileMenuOpen}
             setOpen={setMobileMenuOpen}
@@ -77,11 +73,11 @@ const DashboardHeader = ({
             pathname={location.pathname}
             isSavedActive={isSavedActive}
             onSavedClick={onSavedClick}
+            onSwapRequestsClick={onSwapRequestsClick}
             onLogout={onLogout}
           />
 
         </div>
-
       </div>
     </header>
   );
