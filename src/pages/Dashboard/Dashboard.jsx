@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { getUsers } from "../../api/userApi";
 import { toast } from "react-toastify";
 import { useSearchParams } from "react-router-dom";
-import { Search, MapPin, Sparkles, Star, Bookmark, X, CheckCircle2, Flame } from "lucide-react";
+import { Search, MapPin, Sparkles, Star, Bookmark, X, CheckCircle2 } from "lucide-react";
 import { getCatalogueSkills } from "../../api/skillCatalogueApi";
 import { useAuthStore } from "../../store/authStore";
 import { sendSwapRequest } from "../../api/swapRequestApi";
@@ -12,7 +12,6 @@ const Dashboard = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [categories, setCategories] = useState([]);
-  const [activeCategory, setActiveCategory] = useState("All");
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -68,7 +67,6 @@ const Dashboard = () => {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
-  const [showPopularOnly, setShowPopularOnly] = useState(false);
 
   const { savedUserIds, toggleSaveUser, currentUser } = useAuthStore();
 
@@ -104,27 +102,38 @@ const Dashboard = () => {
   const handleResetFilters = () => {
     setSearchQuery("");
     setSelectedCategory("All");
-    setShowPopularOnly(false);
     searchParams.delete("saved");
     setSearchParams(searchParams);
   };
 
-  // Filter users based on search query, category, popular flag, and saved status
+  // Filter users based on search query, category, and saved status
   const filteredUsers = users.filter((user) => {
-    // Category filter
+    const query = searchQuery.toLowerCase().trim();
+
+    const matchesSearch =
+      !query ||
+      user.name?.toLowerCase().includes(query) ||
+      user.place?.toLowerCase().includes(query) ||
+      user.description?.toLowerCase().includes(query) ||
+      user.skillsToTeach.some((skill) =>
+        skill.toLowerCase().includes(query)
+      ) ||
+      user.skillsToLearn.some((skill) =>
+        skill.toLowerCase().includes(query)
+      );
+
     const matchesCategory =
       selectedCategory === "All" ||
       user.category?.toLowerCase() === selectedCategory.toLowerCase();
 
-    // Popular filter
-    const matchesPopular =
-      !showPopularOnly || user.popular;
-
-    // Saved filter
     const matchesSaved =
-      !showSavedOnly || savedUserIds.includes(user.id);
+      !showSavedOnly || savedUserIds.includes(String(user.id));
 
-    return matchesCategory && matchesPopular && matchesSaved;
+    return (
+      matchesSearch &&
+      matchesCategory &&
+      matchesSaved
+    );
   });
 
   const getInitials = (name) => {
@@ -245,7 +254,7 @@ const Dashboard = () => {
             </span>
           </div>
 
-          {/* Category, Popular & Saved Filter Bar */}
+          {/* Category & Saved Filter Bar */}
           <div className="flex flex-wrap items-center gap-2">
 
             {/* All Category */}
@@ -272,21 +281,6 @@ const Dashboard = () => {
                 {cat}
               </button>
             ))}
-
-            {/* Popular Filter Toggle */}
-            <button
-              onClick={() => setShowPopularOnly(!showPopularOnly)}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold transition ${showPopularOnly
-                ? "bg-orange-500 text-white shadow-sm"
-                : "bg-white border border-[#e5e1dc] text-[#6b6290] hover:border-orange-500"
-                }`}
-            >
-              <Flame
-                size={14}
-                className={showPopularOnly ? "fill-white" : "text-orange-500"}
-              />
-              <span>Popular</span>
-            </button>
 
             {/* Saved Filter Toggle */}
             <button
@@ -339,15 +333,6 @@ const Dashboard = () => {
                         <span>{user.rating}</span>
                         <span className="text-[#6b6290] font-normal">({user.sessions})</span>
                       </div>
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-bold text-[#26105f]">{user.name}</h3>
-                      {user.popular && (
-                        <span className="bg-orange-100 text-orange-600 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
-                          Popular
-                        </span>
-                      )}
                     </div>
 
                     <div className="flex items-center gap-1 text-xs text-[#6b6290] mb-2 mt-0.5">

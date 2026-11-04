@@ -32,7 +32,7 @@ const MetricCards = ({
         icon={TrendingUp}
         iconBg="bg-orange-500"
         value={totalSessions.toLocaleString()}
-        description="Sessions This Month · Across all skills"
+        description="Sessions Completed · Across all users"
       />
 
     </div>
