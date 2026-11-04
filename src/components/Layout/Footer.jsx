@@ -25,23 +25,6 @@ const Footer = () => {
             © 2026 SkillSwap. Built for curious humans.
           </p>
 
-          {/* Links */}
-          <div className="flex items-center gap-5 text-xs text-[#77709b]">
-            <Link
-              to="#"
-              className="transition hover:text-[#32106f]"
-            >
-              Privacy
-            </Link>
-
-            <Link
-              to="#"
-              className="transition hover:text-[#32106f]"
-            >
-              Terms
-            </Link>
-          </div>
-
         </div>
       </div>
     </footer>

@@ -136,14 +136,15 @@ const Dashboard = () => {
     );
   });
 
-  const getInitials = (name) => {
-    return name
-      .split(" ")
-      .map((word) => word[0])
-      .join("")
-      .slice(0, 2)
-      .toUpperCase();
-  };
+  const getInitials = (name = "") => {
+  return name
+    .split(" ")
+    .filter(Boolean)
+    .map((word) => word[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+};
 
 
   const handleOpenSwapModal = (user) => {
@@ -303,7 +304,7 @@ const Dashboard = () => {
         {filteredUsers.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {filteredUsers.map((user) => {
-              const isSaved = savedUserIds.includes(user.id);
+              const isSaved = savedUserIds.includes(String(user.id));
 
               return (
                 <div
