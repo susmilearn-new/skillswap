@@ -8,12 +8,11 @@ const LearningRecommendations = ({
 
       <div>
         <h2 className="text-lg font-bold text-[#26105f]">
-          AI Learning Path Recommendations
+          Top In-Demand Skills
         </h2>
 
         <p className="text-xs text-[#6b6290]">
-          Suggested exchange sequences based on skill
-          adjacency
+          Skills most frequently requested by community members
         </p>
       </div>
 

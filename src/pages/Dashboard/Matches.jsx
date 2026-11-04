@@ -9,6 +9,7 @@ import MatchesHeader from "../../components/Matches/MatchesHeader";
 import MatchCard from "../../components/Matches/MatchCard";
 import EmptyMatches from "../../components/Matches/EmptyMatches";
 import RequestModal from "../../components/Matches/RequestModal";
+import { sendSwapRequest, getSentRequests } from "../../api/swapRequestApi";
 
 const Matches = () => {
     const currentUser = useAuthStore((state) => state.currentUser);
@@ -73,7 +74,7 @@ const Matches = () => {
                     const scoreLabel = user.scoreLabel || "Good";
 
                     return {
-                        id: user.id,
+                        id: user.id || user._id,
                         name,
                         place: user.place,
                         description: user.description,
@@ -104,9 +105,60 @@ const Matches = () => {
         fetchMatches();
     }, []);
 
-    const handleSendRequest = (matchId) => {
-        setRequestSentIds((prev) => [...prev, String(matchId)]);
-        setActiveModalMatch(null);
+    // Fetch previously sent requests
+    useEffect(() => {
+        const fetchSentRequests = async () => {
+            try {
+                const response = await getSentRequests();
+
+                const sentRequests = response.data.requests || [];
+
+                const pendingReceiverIds = sentRequests
+                    .filter((request) => request.status === "pending")
+                    .map((request) =>
+                        String(request.receiver?._id || request.receiver)
+                    );
+
+                setRequestSentIds(pendingReceiverIds);
+            } catch (error) {
+                console.error("Failed to load sent requests:", error);
+            }
+        };
+
+        fetchSentRequests();
+    }, []);
+
+    const handleSendRequest = async (match) => {
+        const skillOffered = match.userTeaches?.[0];
+        const skillWanted = match.matchTeaches?.[0];
+
+        if (!skillOffered || !skillWanted) {
+            toast.error("No matching skills available for this request.");
+            return;
+        }
+
+        try {
+            await sendSwapRequest({
+                receiver: match.id,
+                skillOffered,
+                skillWanted,
+                message: "Hi! I would like to exchange skills with you.",
+            });
+
+            setRequestSentIds((prev) => [
+                ...prev,
+                String(match.id),
+            ]);
+
+            setActiveModalMatch(null);
+
+            toast.success("Exchange request sent successfully!");
+        } catch (error) {
+            toast.error(
+                error.response?.data?.message ||
+                "Failed to send exchange request."
+            );
+        }
     };
 
     if (loading) {
@@ -154,7 +206,7 @@ const Matches = () => {
                     match={activeModalMatch}
                     onCancel={() => setActiveModalMatch(null)}
                     onConfirm={() =>
-                        handleSendRequest(activeModalMatch.id)
+                        handleSendRequest(activeModalMatch)
                     }
                 />
             )}
