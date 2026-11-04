@@ -1,32 +1,65 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { homeCount } from "../../data/homeCount";
+import { getCommunityStats } from "../../api/userApi";
 
 const HeroSection = () => {
+  const [stats, setStats] = useState({
+    totalMembers: 0,
+    totalSkills: 0,
+    totalLearningInterests: 0,
+  });
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const response = await getCommunityStats();
+        setStats(response.data);
+      } catch (error) {
+        console.error("Failed to load community statistics:", error);
+      }
+    };
+
+    fetchStats();
+  }, []);
+
+  const homeCount = [
+    {
+      title: "Community Members",
+      value: stats.totalMembers.toLocaleString(),
+    },
+    {
+      title: "Unique Skills Taught",
+      value: stats.totalSkills.toLocaleString(),
+    },
+    {
+      title: "Learning Interests",
+      value: stats.totalLearningInterests.toLocaleString(),
+    },
+  ];
+
   return (
     <section className="bg-[#32106f] px-6 py-20 text-white md:py-28">
       <div className="mx-auto max-w-5xl text-center">
 
-        {/* Badge */}
         <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-sm">
           <span>⚡</span>
-          <span>4,800+ skills being exchanged right now</span>
+          <span>
+            {stats.totalMembers.toLocaleString()}+ community members
+          </span>
         </div>
 
-        {/* Heading */}
         <h1 className="mx-auto max-w-4xl text-5xl font-fraunces font-bold leading-tight tracking-tight md:text-7xl">
           Trade skills.
           <br />
           Grow together.
         </h1>
 
-        {/* Description */}
         <p className="mx-auto mt-6 max-w-2xl text-base leading-7 text-white/75 md:text-lg">
           The community where what you know is your currency.
           Teach Python, learn Guitar. Teach French, learn Yoga.
           Zero cash. Pure exchange.
         </p>
 
-        {/* Buttons */}
         <div className="mt-10 flex flex-col justify-center gap-4 sm:flex-row">
           <Link
             to="/register"
@@ -43,7 +76,6 @@ const HeroSection = () => {
           </Link>
         </div>
 
-        {/* Statistics */}
         <div className="mt-16 grid grid-cols-1 gap-8 border-t border-white/15 pt-10 sm:grid-cols-3">
           {homeCount.map((count) => (
             <div key={count.title}>
@@ -63,4 +95,4 @@ const HeroSection = () => {
   );
 };
 
-export default HeroSection
+export default HeroSection;
