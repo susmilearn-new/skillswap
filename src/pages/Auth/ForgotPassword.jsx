@@ -3,6 +3,7 @@ import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import { forgotPassword } from "../../api/authApi";
 
 const ForgotPassword = () => {
 
@@ -19,9 +20,21 @@ const ForgotPassword = () => {
 
     });
 
-    const handleSubmit = (values) => {
+    const handleSubmit = async (values, { setSubmitting }) => {
+        try {
+            const response = await forgotPassword(values.email.trim());
 
-        navigate("/login");
+            toast.success(response.data.message);
+
+            navigate("/login");
+        } catch (error) {
+            toast.error(
+                error.response?.data?.message ||
+                "Unable to process password reset request"
+            );
+        } finally {
+            setSubmitting(false);
+        }
     };
 
     return (

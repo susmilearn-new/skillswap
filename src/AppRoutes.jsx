@@ -14,6 +14,7 @@ import Matches from "./pages/Dashboard/Matches";
 import Trends from "./pages/Dashboard/Trends";
 import Profile from "./pages/Dashboard/Profile";
 import SwapRequests from "./pages/Dashboard/SwapRequests";
+import ResetPassword from "./pages/Auth/ResetPassword";
 
 const AppRoutes = () => {
   return (
@@ -25,6 +26,7 @@ const AppRoutes = () => {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password/:token" element={<ResetPassword />} />
       </Route>
 
       {/* Protected */}
