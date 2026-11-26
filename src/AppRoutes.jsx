@@ -15,6 +15,7 @@ import Trends from "./pages/Dashboard/Trends";
 import Profile from "./pages/Dashboard/Profile";
 import SwapRequests from "./pages/Dashboard/SwapRequests";
 import ResetPassword from "./pages/Auth/ResetPassword";
+import SkillCatalogue from "./pages/Admin/SkillCatalogue";
 
 const AppRoutes = () => {
   return (
@@ -37,6 +38,7 @@ const AppRoutes = () => {
           <Route path="/trends" element={<Trends />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/dashboard/swap-requests" element={<SwapRequests/>}/>
+          <Route path="/skills" element={<SkillCatalogue />}/>
         </Route>
       </Route>
 

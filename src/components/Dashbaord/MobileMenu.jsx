@@ -1,3 +1,4 @@
+
 import { Link } from "react-router-dom";
 import {
   Bookmark,
@@ -9,6 +10,7 @@ import {
   Bars3Icon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
+import { useAuthStore } from "../../store/authStore";
 
 const MobileMenu = ({
   open,
@@ -23,16 +25,20 @@ const MobileMenu = ({
   onLogout,
   onSwapRequestsClick,
 }) => {
+  const { currentUser } = useAuthStore();
+
+  const isAdmin = currentUser?.role === "admin";
+
   const getMobileLinkClass = (active) =>
-    `rounded-xl px-4 py-2.5 text-sm font-medium transition ${active
-      ? "bg-[#eee9f8] text-[#26105f]"
-      : "text-[#6b6290] hover:bg-gray-100"
+    `rounded-xl px-4 py-2.5 text-sm font-medium transition ${
+      active
+        ? "bg-[#eee9f8] text-[#26105f]"
+        : "text-[#6b6290] hover:bg-gray-100"
     }`;
 
   return (
     <div className="lg:hidden">
 
-      {/* Menu button */}
       <button
         type="button"
         onClick={() => setOpen((prev) => !prev)}
@@ -46,13 +52,11 @@ const MobileMenu = ({
         )}
       </button>
 
-      {/* Menu */}
       {open && (
         <div className="absolute left-0 right-0 top-16 border-t border-[#e5e1dc] bg-[#f8f7f4] px-6 py-5 animate-in fade-in duration-150">
 
           {/* User */}
           <div className="mb-3 flex items-center gap-3 border-b border-[#e5e1dc] px-2 pb-4">
-
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#7839ed] text-sm font-semibold text-white shadow-sm">
               {initials}
             </div>
@@ -66,7 +70,6 @@ const MobileMenu = ({
                 {email}
               </p>
             </div>
-
           </div>
 
           {/* Navigation */}
@@ -76,8 +79,7 @@ const MobileMenu = ({
               to="/dashboard"
               onClick={() => setOpen(false)}
               className={getMobileLinkClass(
-                pathname === "/dashboard" &&
-                !isSavedActive
+                pathname === "/dashboard" && !isSavedActive
               )}
             >
               Browse
@@ -86,9 +88,7 @@ const MobileMenu = ({
             <Link
               to="/matches"
               onClick={() => setOpen(false)}
-              className={getMobileLinkClass(
-                pathname === "/matches"
-              )}
+              className={getMobileLinkClass(pathname === "/matches")}
             >
               Matches
             </Link>
@@ -96,12 +96,21 @@ const MobileMenu = ({
             <Link
               to="/trends"
               onClick={() => setOpen(false)}
-              className={getMobileLinkClass(
-                pathname === "/trends"
-              )}
+              className={getMobileLinkClass(pathname === "/trends")}
             >
               Trends
             </Link>
+
+            {/* Admin only */}
+            {isAdmin && (
+              <Link
+                to="/skills"
+                onClick={() => setOpen(false)}
+                className={getMobileLinkClass(pathname === "/skills")}
+              >
+                Skill Catalogue
+              </Link>
+            )}
 
             {/* Saved */}
             <button
@@ -109,10 +118,11 @@ const MobileMenu = ({
                 onSavedClick();
                 setOpen(false);
               }}
-              className={`flex items-center justify-between rounded-xl px-4 py-2.5 text-sm font-medium transition ${isSavedActive
+              className={`flex items-center justify-between rounded-xl px-4 py-2.5 text-sm font-medium transition ${
+                isSavedActive
                   ? "border border-orange-200 bg-orange-50 text-orange-600"
                   : "text-[#6b6290] hover:bg-gray-100"
-                }`}
+              }`}
             >
               <div className="flex items-center gap-2">
                 <Bookmark
@@ -123,7 +133,6 @@ const MobileMenu = ({
                       : ""
                   }
                 />
-
                 Saved Items
               </div>
 
@@ -138,10 +147,11 @@ const MobileMenu = ({
                 onSwapRequestsClick();
                 setOpen(false);
               }}
-              className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition ${pathname === "/dashboard/swap-requests"
+              className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition ${
+                pathname === "/dashboard/swap-requests"
                   ? "bg-[#eee9f8] text-[#26105f]"
                   : "text-[#6b6290] hover:bg-gray-100"
-                }`}
+              }`}
             >
               <ArrowLeftRight size={16} />
               Swap Requests
@@ -155,11 +165,7 @@ const MobileMenu = ({
                 onClick={() => setOpen(false)}
                 className="flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-medium text-[#26105f] transition hover:bg-[#f0ebf8]"
               >
-                <User
-                  size={16}
-                  className="text-[#7839ed]"
-                />
-
+                <User size={16} className="text-[#7839ed]" />
                 Edit Profile
               </Link>
 
@@ -170,20 +176,14 @@ const MobileMenu = ({
                 }}
                 className="flex w-full items-center gap-3 rounded-xl px-4 py-2.5 text-left text-sm font-medium text-red-600 transition hover:bg-red-50"
               >
-                <LogOut
-                  size={16}
-                  className="text-red-500"
-                />
-
+                <LogOut size={16} className="text-red-500" />
                 Logout
               </button>
 
             </div>
-
           </div>
         </div>
       )}
-
     </div>
   );
 };
