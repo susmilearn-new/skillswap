@@ -29,8 +29,8 @@ const MatchCard = ({
         <SkillExchange
           userFirstName={userFirstName}
           matchFirstName={matchFirstName}
-          userTeaches={match.userTeaches}
-          matchTeaches={match.matchTeaches}
+          userTeaches={match.matchTeaches}
+          matchTeaches={match.userTeaches}
         />
 
       </div>
