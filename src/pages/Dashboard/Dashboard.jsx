@@ -335,6 +335,10 @@ const Dashboard = () => {
                         <span className="text-[#6b6290] font-normal">({user.sessions})</span>
                       </div>
                     </div>
+                    
+                    <div className="flex items-center gap-1 font-semibold text-sm text-[#6b6290] mb-2 mt-0.5">
+                      <span>{user.name}</span>
+                    </div>
 
                     <div className="flex items-center gap-1 text-xs text-[#6b6290] mb-2 mt-0.5">
                       <MapPin size={12} />
